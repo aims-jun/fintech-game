@@ -13,7 +13,7 @@
   const ROUNDS = Object.freeze([
     Object.freeze({ id: 'position', label: 'LEVEL 1', cycleMs: 2700, maxError: 0.46, perfectError: 0.09, greatError: 0.25 }),
     Object.freeze({ id: 'angle', label: 'LEVEL 2', cycleMs: 1850, maxError: 0.28, perfectError: 0.06, greatError: 0.16 }),
-    Object.freeze({ id: 'scale', label: 'FINAL', cycleMs: 980, maxError: 0.095, perfectError: 0.020, greatError: 0.050 })
+    Object.freeze({ id: 'scale', label: 'FINAL', cycleMs: 980, maxError: 0.115, perfectError: 0.020, greatError: 0.050 })
   ]);
 
   function roundIndex(index) {
