@@ -8,8 +8,12 @@
     pause:'<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></svg>',
     play:'<svg viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></svg>'
   };
-  let localScene = 'home', renderedScene = '', renderedDoc = '', lastFeedback = '', lastSession = '', lastSecond = -1, lastCountdown = -1, lastAi = -1, lastScore = -1;
+  let localScene = 'home', renderedScene = '', renderedDoc = '', lastFeedback = '', lastSession = '', lastSecond = -1, lastCountdown = -1, lastAi = -1, lastScore = -1, lastAiProgress = -1;
   let context = null, muted = false, practice = new Set(), frameId = 0, connectionFrame = 0, tickBusy = false, lastTick = 0, hadInteraction = false;
+  // Decode the form photos up front so a round change does not stall a slow kiosk mid-animation.
+  const photos = ['claim-form','detail-form','receipt-hospital','receipt-pharmacy'].map(name => {
+    const image = new Image(); image.src = 'assets/' + name + '-photo.png'; image.decode?.().catch(() => {}); return image;
+  });
   const store = E.createStore();
   const kiosk = window.parent !== window && new URLSearchParams(location.search).has('kiosk');
   if (kiosk) {
@@ -89,7 +93,7 @@
       renderDocs(v);
       $('player-name').textContent=v.player||'관람객';
       $('human-count').innerHTML=v.human+'<span> / 3</span>';
-      $('human-fill').style.width=(v.humanProgress*100)+'%';
+      $('human-fill').style.transform='scaleX('+v.humanProgress+')';
       document.querySelectorAll('[data-human-pip]').forEach(el=>el.classList.toggle('complete',Number(el.dataset.humanPip)<v.human));
       document.querySelectorAll('[data-field]').forEach(button=>{
         const order=v.selected.indexOf(button.dataset.field);
@@ -166,7 +170,7 @@
         lastSecond=seconds;
       }
       $('timepiece').classList.toggle('urgent',seconds<=10&&!v.paused);
-      $('ai-fill').style.width=(v.aiProgress*100)+'%';$('ai-runner').style.left=(v.aiProgress*100)+'%';
+      if(v.aiProgress!==lastAiProgress){lastAiProgress=v.aiProgress;$('ai-fill').style.transform='scaleX('+v.aiProgress+')';$('ai-runner').style.transform='translateX('+(v.aiProgress*100)+'%)';}
       if(v.ai!==lastAi){$('ai-count').innerHTML=v.ai+'<span> / 3</span>';document.querySelectorAll('[data-ai-pip]').forEach(el=>el.classList.toggle('complete',Number(el.dataset.aiPip)<v.ai));lastAi=v.ai;}
       const status = v.paused ? '잠시 멈춤' : v.phase === 'reveal' ? '정답 확인 중' :
         ['서류 읽는 중', '정보 비교 중', '마지막 확인 중'][Math.min(v.ai, 2)];
@@ -220,7 +224,7 @@
     const wanted=sceneFor(v.phase);
     if(v.phase!==raw.phase||wanted!==renderedScene||renderedDoc!==v.session+'-'+v.round&&wanted==='arena')render(v);
     clock(v);
-    if(time-lastTick>100&&!tickBusy&&['countdown','playing','reveal'].includes(raw.phase)&&!raw.paused){lastTick=time;tickBusy=true;store.dispatch({type:'tick',session:raw.session}).finally(()=>{tickBusy=false;});}
+    if(time-lastTick>100&&!tickBusy&&['countdown','playing','reveal'].includes(raw.phase)&&!raw.paused&&E.reduce(raw,{type:'tick',session:raw.session},Date.now())!==raw){lastTick=time;tickBusy=true;store.dispatch({type:'tick',session:raw.session}).finally(()=>{tickBusy=false;});}
     frameId=requestAnimationFrame(frame);
   }
   frameId=requestAnimationFrame(frame);

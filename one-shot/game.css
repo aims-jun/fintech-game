@@ -64,9 +64,9 @@ h1,h2,p{margin:0}
 .receipt-field{position:absolute;display:flex;justify-content:center;align-items:center;white-space:nowrap;overflow:hidden;line-height:1.1;padding:0 1.2%;text-align:center}
 .receipt-field.money{justify-content:flex-end}
 .receipt-field.fiction{font-size:.65em;color:#60685e}
-.scan-beam{position:absolute;left:0;right:0;top:0;height:2px;opacity:0;background:var(--ink);z-index:5}
+.scan-beam{position:absolute;left:0;right:0;top:0;height:2px;opacity:0;background:var(--ink);z-index:5;will-change:transform,opacity}
 .scan-beam span{position:absolute;bottom:0;height:32px;left:0;right:0;background:linear-gradient(0deg,#d8f34870,transparent)}
-.scan-wash{position:absolute;inset:0;background:var(--accent);opacity:0;mix-blend-mode:multiply;transform-origin:top}
+.scan-wash{position:absolute;inset:0;background:var(--accent);opacity:0;transform-origin:top}
 .scan-stamp{position:absolute;right:-18px;bottom:22px;width:55px;height:55px;border-radius:50%;display:grid;place-items:center;background:var(--accent);border:3px solid var(--canvas);opacity:0;transform:scale(.5) rotate(-25deg)}
 .scan-stamp svg{height:27px;width:27px;fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .countdown{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:8;background:#f7f8f7de}
@@ -172,7 +172,7 @@ h1,h2,p{margin:0}
 .text-button:hover{color:var(--ink)}.text-button>span{font-size:18px;margin-left:9px}
 .result-controls .text-button:last-child{justify-self:end}
 .save-status{text-align:center;align-self:start;font-size:10px;letter-spacing:-.2px;color:#97a18c}
-.modal-overlay{position:fixed;inset:0;z-index:40;background:#10180c48;backdrop-filter:blur(10px);display:grid;place-items:center;padding:20px}
+.modal-overlay{position:fixed;inset:0;z-index:40;background:#10180c80;display:grid;place-items:center;padding:20px}
 .modal-card{width:min(520px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:38px;background:var(--canvas);box-shadow:0 28px 100px -30px #1118;border-radius:7px;position:relative;animation:screen-in .25s ease-out}
 .modal-card .eyebrow{justify-content:flex-start;font-size:10px}
 .modal-card h2{font-size:26px;letter-spacing:-1px;line-height:1.4;margin:14px 0 20px}
@@ -195,7 +195,7 @@ h1,h2,p{margin:0}
 .no-script{position:fixed;inset:0;z-index:99;background:var(--canvas);display:grid;place-items:center;font-size:20px;text-align:center;padding:30px}
 @keyframes count-pop{0%{transform:scale(1.35);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:scale(.94);opacity:0}}
 @keyframes feedback{0%{opacity:0;transform:translate(-50%,-50%) rotate(-7deg) scale(1.35)}20%{opacity:1;transform:translate(-50%,-50%) rotate(-7deg) scale(1)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-65%) rotate(-7deg) scale(.9)}}
-@keyframes scan-sweep{0%{top:0;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:100%;opacity:0}}
+@keyframes scan-sweep{0%{transform:translateY(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(var(--paper-h));opacity:0}}
 @keyframes scan-fill{0%{transform:scaleY(0);opacity:.15}100%{transform:scaleY(1);opacity:0}}
 @keyframes stamp{to{opacity:1;transform:scale(1) rotate(-10deg)}}
 @keyframes burst{0%{transform:translate(0,0) rotate(var(--br));opacity:0}15%{opacity:1}100%{transform:translate(var(--bx),var(--by)) rotate(var(--br));opacity:0}}
