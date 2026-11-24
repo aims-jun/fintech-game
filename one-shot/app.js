@@ -24,12 +24,12 @@
     spaceDown: false, lastTick: -1, lastCount: -1, captureAligned: false, scanStarted: false,
     previousPhase: null, pauseAt: 0, modal: null, previousFocus: null,
     bestBefore: 0, total: 0, resultSaved: false, sound: records.getState().sound,
-    toastUntil: 0, running: true, frameId: 0
+    toastUntil: 0, running: true, frameId: 0, timerId: 0
   };
   let fit = L.fitStage(1100, 420);
-  const game = $('game'), arena = $('arena'), paper = $('paper');
+  const game = $('game'), arena = $('arena'), paper = $('paper'), cueLayer = $('target-aligned');
   const timeLabel = $('time'), dial = $('dial-value');
-  let motion = null, lastTenth = -1;
+  let motion = null, cue = null, lastTenth = -1;
   const stepNodes = [...document.querySelectorAll('.shot-step')];
 
   const sound = {
@@ -73,8 +73,12 @@
     game.dataset.phase = phase;
     paper.disabled = phase !== 'home' && phase !== 'round';
     paper.setAttribute('aria-label', phase === 'home' ? '영수증을 눌러 시작' : '영수증 촬영');
-    motion?.cancel();
-    motion = null;
+    stopMotion();
+    wake();
+  }
+  function stopMotion() {
+    motion?.cancel(); cue?.cancel();
+    motion = null; cue = null;
   }
   function displayToast(text) {
     $('toast').textContent = text;
@@ -132,9 +136,23 @@
   function applyPose(round, value) {
     paper.style.transform = transform(round, value);
   }
+  function alignedCue(round, duration) {
+    // Mirror the scoring window on the compositor so the highlight stays locked
+    // to the receipt instead of trailing it by a main-thread frame.
+    const steps = 2000, maxError = E.ROUNDS[round].maxError, keyframes = [];
+    let previous = null;
+    for (let i = 0; i <= steps; i++) {
+      const on = E.sample(round, duration * i / steps, state.seed).error <= maxError ? 1 : 0;
+      if (on === previous) continue;
+      if (previous !== null) keyframes.push({offset: i / steps, opacity: previous});
+      keyframes.push({offset: i / steps, opacity: on});
+      previous = on;
+    }
+    keyframes.push({offset: 1, opacity: previous});
+    return keyframes;
+  }
   function animateRound() {
-    motion?.cancel();
-    motion = null;
+    stopMotion();
     const round = state.roundIndex;
     applyPose(round, state.clock.snapshot(now()).value);
     if (!paper.animate) return;
@@ -146,6 +164,9 @@
     }));
     motion = paper.animate(keyframes, {duration, iterations: Infinity, easing: 'linear'});
     motion.startTime = state.phaseAt;
+    arena.classList.remove('is-aligned');
+    cue = cueLayer.animate(alignedCue(round, duration), {duration, iterations: Infinity, easing: 'linear'});
+    cue.startTime = state.phaseAt;
   }
   function updateSteps() {
     stepNodes.forEach((node, i) => {
@@ -338,8 +359,7 @@
       state.previousPhase = state.phase;
       state.pauseAt = now();
       state.clock?.pause(state.pauseAt);
-      motion?.cancel();
-      motion = null;
+      stopMotion();
       if (state.previousPhase === 'round') applyPose(state.roundIndex, state.clock.snapshot(state.pauseAt).value);
       state.phase = 'paused'; game.dataset.paused = 'true';
     } else state.previousPhase = null;
@@ -404,11 +424,25 @@
     if (state.phase === 'countdown') updateCountdown(instant);
     else if (state.phase === 'round') {
       const current = state.clock.snapshot(instant);
-      if (!motion) applyPose(state.roundIndex, current.value);
-      arena.classList.toggle('is-aligned', current.error <= E.ROUNDS[state.roundIndex].maxError);
+      if (!motion) {
+        applyPose(state.roundIndex, current.value);
+        arena.classList.toggle('is-aligned', current.error <= E.ROUNDS[state.roundIndex].maxError);
+      }
       updateTimer(current.remainingMs);
       if (current.remainingMs <= 0) capture(instant);
     } else if (state.phase === 'capture') updateCapture(instant);
+    schedule();
+  }
+  function schedule() {
+    if (!state.running) return;
+    // The compositor moves the receipt during a round. Waking the main thread
+    // every frame for a 10 Hz timer only adds style and commit work on a slow kiosk.
+    if (state.phase === 'round' && motion) state.timerId = setTimeout(() => { state.timerId = 0; frame(now()); }, 50);
+    else state.frameId = requestAnimationFrame(frame);
+  }
+  function wake() {
+    if (!state.timerId) return;
+    clearTimeout(state.timerId); state.timerId = 0;
     state.frameId = requestAnimationFrame(frame);
   }
   function keydown(event) {
@@ -485,7 +519,7 @@
   $('modal-close').addEventListener('click', () => closeModal(true));
   $('go-home').addEventListener('click', showHome);
   $('result-home').addEventListener('click', showHome);
-  window.addEventListener('pagehide', () => { pause(); state.running = false; cancelAnimationFrame(state.frameId); });
+  window.addEventListener('pagehide', () => { pause(); state.running = false; cancelAnimationFrame(state.frameId); clearTimeout(state.timerId); state.timerId = 0; });
   window.addEventListener('pageshow', () => { if (!state.running) { state.running = true; state.frameId = requestAnimationFrame(frame); } });
 
   makeReceipt(); showHome();
