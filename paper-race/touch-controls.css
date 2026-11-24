@@ -77,3 +77,23 @@ body.kiosk { --tap: var(--ui-control); --button-text: var(--ui-body); }
 .kiosk .brand-story-top > span:last-child, .kiosk .brand-story a { font-size:var(--ui-small); color:#41453f; }
 .kiosk .brand-story-top .inner-brand-image { width:clamp(100px,11vmin,215px); max-height:none; }
 .kiosk .arena-bottom .live-score { margin-left:auto; }
+
+/* A steady numeric readout shares the race tracks' horizontal direction. */
+.racebar { grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); }
+.round-timer {
+  display:grid; justify-items:center; align-content:center; gap:clamp(2px,.35vmin,7px);
+  width:clamp(66px,9.5vmin,170px); color:var(--ink);
+}
+.round-timer-label { font-size:clamp(12px,1.45vmin,27px); line-height:1; font-weight:650; color:#595b55; }
+.round-timer-value { display:inline-flex; align-items:baseline; gap:.16em; font:700 clamp(29px,4.5vmin,84px)/1 Arial,sans-serif; }
+.round-timer-value strong { font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:-.05em; }
+.round-timer-value > span { font-size:.4em; font-weight:650; }
+.round-timer-track { width:100%; height:clamp(3px,.35vmin,6px); border-radius:8px; background:#d8d8d2; overflow:hidden; }
+.round-timer-track i { display:block; height:100%; background:currentColor; transform-origin:left; }
+.round-timer.urgent { color:#b54024; }
+@media (max-height:500px) and (orientation:landscape) {
+  .round-timer { grid-template-columns:auto auto; align-items:center; gap:2px 5px; width:auto; }
+  .round-timer-label { font-size:11px; }
+  .round-timer-value { font-size:26px; }
+  .round-timer-track { grid-column:1/-1; }
+}

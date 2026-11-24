@@ -139,11 +139,11 @@
     if(['countdown','playing','reveal'].includes(v.phase)){
       const seconds=v.remainingSeconds;
       if(seconds!==lastSecond){
-        $('time-digits').textContent=String(seconds).padStart(2,'0');$('timepiece').classList.remove('tick');void $('timepiece').offsetWidth;$('timepiece').classList.add('tick');
+        $('time-digits').textContent=String(seconds);
+        $('timer-progress').style.transform='scaleX('+Math.max(0, Math.min(1, seconds * 1000 / v.durationMs))+')';
         if(v.phase==='playing'&&!v.paused&&lastSecond>=0)sound(seconds<=10?920:680,seconds<=10?.035:.022,seconds<=10?.036:.011,'square');
         lastSecond=seconds;
       }
-      $('timer-progress').style.strokeDashoffset=String(276.46*v.aiProgress);
       $('timepiece').classList.toggle('urgent',seconds<=10&&!v.paused);
       $('ai-fill').style.width=(v.aiProgress*100)+'%';$('ai-runner').style.left=(v.aiProgress*100)+'%';
       if(v.ai!==lastAi){$('ai-count').innerHTML=v.ai+'<span> / 3</span>';document.querySelectorAll('[data-ai-pip]').forEach(el=>el.classList.toggle('complete',Number(el.dataset.aiPip)<v.ai));lastAi=v.ai;}

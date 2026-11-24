@@ -82,7 +82,11 @@
       <section id="arena" class="scene arena-scene" hidden aria-labelledby="mission-title">
         <div class="racebar">
           <div class="racer racer-human"><div class="racer-heading"><span class="racer-name">YOU<span id="player-name">관람객</span></span><span id="human-count" class="race-count">0<span> / 3</span></span></div><div class="race-track"><div class="track-fill" id="human-fill"></div><i data-human-pip="0"></i><i data-human-pip="1"></i><i data-human-pip="2"></i></div></div>
-          <div class="timepiece" id="timepiece"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-progress" id="timer-progress" cx="50" cy="50" r="44"/></svg><div class="timer-digits" id="time-digits">45</div><span class="timer-label">AI 완료까지</span></div>
+          <div class="round-timer" id="timepiece" role="timer" aria-label="남은 시간">
+            <span class="round-timer-label" aria-hidden="true">남은 시간</span>
+            <span class="round-timer-value"><strong id="time-digits">45</strong><span>초</span></span>
+            <span class="round-timer-track" aria-hidden="true"><i id="timer-progress"></i></span>
+          </div>
           <div class="racer racer-ai"><div class="racer-heading"><span class="racer-name">AI<span id="ai-status">서류 읽는 중<span class="animated-dots">...</span></span></span><span id="ai-count" class="race-count">0<span> / 3</span></span></div><div class="race-track"><div class="track-fill" id="ai-fill"></div><i data-ai-pip="0"></i><i data-ai-pip="1"></i><i data-ai-pip="2"></i><b class="ai-runner" id="ai-runner"></b></div></div>
         </div>
         <div class="mission-heading"><div class="mission-copy"><div class="mission-kicker"><span id="round-label">ROUND 01</span><i></i><span id="round-category">날짜</span></div><h1 id="mission-title"></h1></div><div class="selection-guide"><span class="selection-pips"><i id="selection-one"></i><i id="selection-two"></i></span><p id="mission-instruction"></p></div></div>
@@ -99,7 +103,7 @@
       <div class="pause-screen" id="pause-screen" hidden><div class="pause-glyph">Ⅱ</div><h2>잠깐 쉬어갈게요.</h2><p>시간도 AI도 멈췄어요.</p><button class="primary-btn" id="resume">이어하기 <span>→</span></button></div>
       <div class="particle-layer" id="particles" aria-hidden="true"></div>
     </main>
-    <footer class="page-footer"><span id="footer-note">가상 서류 · AI 상대는 게임용 시뮬레이션입니다.</span></footer>
+    <footer class="page-footer" id="footer-note" role="status"></footer>
   </div>
   <dialog id="ranking-dialog" class="ranking-dialog"><div class="dialog-top"><span class="eyebrow">LOCAL LEADERBOARD</span><button class="icon-btn" id="close-ranking" aria-label="랭킹 닫기">×</button></div><h2>오늘의 눈썰미.</h2><div id="ranking-list"></div><p class="dialog-note">이 브라우저에 저장된 기록입니다. 난이도별로 순위를 매겨요.</p></dialog>
 
