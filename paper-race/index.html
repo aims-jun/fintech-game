@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f3f2ee">
+  <title>AIMS — THE PAPER RACE</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23161616'/%3E%3Cpath d='M15 48 29 16h7l14 32H39l-3-8H26l-3 8Zm14-16h5l-2-7Z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="arena.css?v=6.0">
+  <link rel="stylesheet" href="documents.css?v=6.0">
+  <link rel="stylesheet" href="receipt-photos.css?v=6.0">
+  <link rel="stylesheet" href="form-photos.css?v=6.0">
+  <script defer src="cases.js?v=6.0"></script><script defer src="casebook.js?v=6.0"></script><script defer src="hospital-forms.js?v=6.0"></script><script defer src="receipt-photos.js?v=6.0"></script><script defer src="form-photos.js?v=6.0"></script><script defer src="documents.js?v=6.0"></script><script defer src="engine.js?v=6.0"></script><script defer src="app.js?v=6.0"></script>
+</head>
+<body>
+  <div class="app-shell" id="app">
+    <header class="masthead">
+      <a class="wordmark" id="home-mark" href="#home" aria-label="AIMS 게임 첫 화면"><img src="../assets/aims-logo.png" alt="AIMS" class="inner-brand-image"></a>
+      <span class="edition">THE PAPER RACE <span class="edition-divider">/</span> FINTECH WEEK</span>
+      <div class="header-actions">
+        <button class="icon-btn" id="sound-toggle" title="소리 켜기 · M" aria-label="소리 켜기" aria-pressed="false"></button>
+        <button class="icon-btn" id="fullscreen" title="전체화면 · F" aria-label="전체화면"></button>
+        <button class="icon-btn" id="pause-control" title="일시정지 · Space" aria-label="일시정지" hidden></button>
+      </div>
+    </header>
+    <main id="stage" class="stage">
+      <section id="home" class="scene home-scene" aria-labelledby="home-title">
+        <div class="home-copy">
+          <div class="eyebrow"><i class="live-dot"></i> HUMAN vs AI</div>
+          <h1 id="home-title">당신의 눈은<br><span class="outline-type">AI보다</span><br>빠를까<span class="title-period">?</span></h1>
+          <p class="home-description">서류에서 서로 다른 두 곳을 선택하세요.</p>
+          <button class="primary-btn hero-cta" id="challenge">도전하기 <span class="button-arrow">↗</span></button>
+          <div class="home-caption"></div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
+          <span class="orbit-cross cross-a">+</span><span class="orbit-cross cross-b">+</span>
+          <div class="visual-label label-a"><span>01</span> YOUR EYES</div>
+          <div class="visual-label label-b">MACHINE VISION <span>02</span></div>
+          <div class="hero-sheet sheet-a">
+            <div class="mini-paper-brand">AIMS 체험보험 <small>EXHIBITION COPY</small></div>
+            <h3>보험금 청구서</h3><p>질병 · 상해 보험금 청구</p>
+            <div class="mini-row"><span>청구인</span><b>홍길동</b></div>
+            <div class="mini-row"><span>진료일</span><b class="demo-mark">2026.09.13</b></div>
+            <div class="mini-row"><span>의료기관</span><b>가온의원</b></div>
+            <div class="mini-row"><span>청구 유형</span><b>최초 청구</b></div>
+            <div class="paper-rule"></div><div class="mini-signature">청구인 김 다 온</div>
+            <span class="sheet-tab">YOU</span>
+          </div>
+          <div class="hero-sheet sheet-b">
+            <div class="mini-paper-brand">가온의원 <small>PATIENT COPY</small></div>
+            <h3>진료비 영수증</h3><p>외래 진료비 수납 내역</p>
+            <div class="mini-row"><span>환자 성명</span><b>홍길동</b></div>
+            <div class="mini-row"><span>진료일</span><b class="demo-mark">2026.09.14</b></div>
+            <div class="mini-row"><span>본인부담금</span><b>15,000원</b></div>
+            <div class="mini-row"><span>총 수납금액</span><b>40,000원</b></div>
+            <div class="paper-rule"></div><div class="mini-signature">가 온 의 원 (인)</div>
+            <div class="scan-beam"></div><span class="sheet-tab ai-tab">AI</span>
+          </div>
+          <div class="hero-clock"><svg class="hero-ticks" viewBox="0 0 240 240"><circle cx="120" cy="120" r="108"/></svg><span class="hero-clock-top">BEAT THE CLOCK</span><strong id="hero-seconds">45</strong><span class="hero-clock-bottom">SECONDS</span><i class="clock-hand"></i></div>
+          <div class="hero-bottom"><span></span><span class="hero-symbol">↗</span></div>
+        </div>
+        <div class="home-baseline"><span><b>03</b> 개의 단서</span><span><b>02</b> 곳을 클릭</span></div>
+      </section>
+
+      <section id="tutorial" class="scene tutorial-scene" hidden aria-labelledby="tutorial-title">
+        <div class="tutorial-heading"><span class="eyebrow">WARM UP / 시간 제한 없음</span><h1 id="tutorial-title">서로 다른 날짜 두 곳을 선택하세요.</h1><p>서로 다른 날짜를 하나씩 눌러보세요.</p></div>
+        <div class="practice-pair">
+          <div class="practice-paper"><span class="practice-tag">청구서</span><h3>진료 정보</h3><div class="practice-field"><span>진료일</span><button id="practice-a" class="practice-value">2026.09.13</button></div></div>
+          <span class="practice-versus">≠</span>
+          <div class="practice-paper"><span class="practice-tag">영수증</span><h3>진료 정보</h3><div class="practice-field"><span>진료일</span><button id="practice-b" class="practice-value">2026.09.14</button></div></div>
+        </div>
+        <div class="tutorial-bottom"><p id="practice-feedback" aria-live="polite">두 날짜를 누르세요.</p><button class="primary-btn" id="start-race">준비됐어요 <span>→</span></button><button class="text-btn" id="back-home">처음으로</button></div>
+      </section>
+
+      <section id="arena" class="scene arena-scene" hidden aria-labelledby="mission-title">
+        <div class="racebar">
+          <div class="racer racer-human"><div class="racer-heading"><span class="racer-name">YOU<span id="player-name">관람객</span></span><span id="human-count" class="race-count">0<span> / 3</span></span></div><div class="race-track"><div class="track-fill" id="human-fill"></div><i data-human-pip="0"></i><i data-human-pip="1"></i><i data-human-pip="2"></i></div></div>
+          <div class="timepiece" id="timepiece"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="timer-track" cx="50" cy="50" r="44"/><circle class="timer-progress" id="timer-progress" cx="50" cy="50" r="44"/></svg><div class="timer-digits" id="time-digits">45</div><span class="timer-label">AI 완료까지</span></div>
+          <div class="racer racer-ai"><div class="racer-heading"><span class="racer-name">AI<span id="ai-status">서류 읽는 중<span class="animated-dots">...</span></span></span><span id="ai-count" class="race-count">0<span> / 3</span></span></div><div class="race-track"><div class="track-fill" id="ai-fill"></div><i data-ai-pip="0"></i><i data-ai-pip="1"></i><i data-ai-pip="2"></i><b class="ai-runner" id="ai-runner"></b></div></div>
+        </div>
+        <div class="mission-heading"><div class="mission-copy"><div class="mission-kicker"><span id="round-label">ROUND 01</span><i></i><span id="round-category">날짜</span></div><h1 id="mission-title"></h1></div><div class="selection-guide"><span class="selection-pips"><i id="selection-one"></i><i id="selection-two"></i></span><p id="mission-instruction"></p></div></div>
+        <div class="documents" id="documents"><div class="paper-slot" id="doc-left"></div><div class="paper-slot" id="doc-right"></div><svg class="evidence-lines" id="evidence-lines" aria-hidden="true"></svg><div class="found-seal" id="found-seal" aria-hidden="true"><span>✓</span><b>찾았다!</b><small>EVIDENCE FOUND</small></div></div>
+        <div class="arena-bottom"><div class="round-feedback" id="round-feedback" role="status">두 값을 골라주세요.</div><button class="text-btn hint-btn" id="hint-btn">힌트</button><div class="live-score" aria-label="현재 점수"><span>점수</span><strong id="live-score">0</strong><small>점</small></div></div>
+      </section>
+
+      <section id="result" class="scene result-scene" hidden aria-labelledby="result-title">
+        <div class="result-main"><div class="eyebrow" id="result-kicker">RACE COMPLETE</div><h1 id="result-title">YOU<br><span class="outline-type">WIN.</span></h1><p class="result-subtitle" id="result-subtitle"></p><div class="result-actions"><button class="primary-btn" id="result-home">다음 참가자 <span>→</span></button></div></div>
+        <div class="result-detail"><div class="result-score-block reward-block"><span class="eyebrow">MISSION RESULT</span><div class="reward-message" id="reward-message">완료 여부 확인</div><div class="final-score-display"><span>최종 점수</span><strong id="paper-final-score">0</strong><small>점</small></div><div class="result-facts" id="result-facts"></div></div><div class="brand-story"><div class="brand-story-top"><span class="wordmark"><img src="../assets/aims-logo.png" alt="AIMS" class="inner-brand-image"></span><span>AutoCapture</span></div><h2>보험 서류를 데이터로.</h2><p>AutoCapture · 서류 인식, 데이터화, 검증</p><div class="story-sequence"><span>서류</span><i>→</i><span>데이터</span><i>→</i><span>확인</span></div><a href="https://www.aimskr.com/autocapture" target="_blank" rel="noopener">AIMS AutoCapture 알아보기 ↗</a></div></div>
+      </section>
+
+      <div class="countdown-screen" id="countdown-screen" hidden><span class="eyebrow">당신 vs AI</span><strong id="countdown-number">3</strong><p>준비됐나요?</p></div>
+      <div class="pause-screen" id="pause-screen" hidden><div class="pause-glyph">Ⅱ</div><h2>잠깐 쉬어갈게요.</h2><p>시간도 AI도 멈췄어요.</p><button class="primary-btn" id="resume">이어하기 <span>→</span></button></div>
+      <div class="particle-layer" id="particles" aria-hidden="true"></div>
+    </main>
+    <footer class="page-footer"><span id="footer-note">가상 서류 · AI 상대는 게임용 시뮬레이션입니다.</span><span class="build-label">AIMS / ARENA 6.0</span></footer>
+  </div>
+  <dialog id="ranking-dialog" class="ranking-dialog"><div class="dialog-top"><span class="eyebrow">LOCAL LEADERBOARD</span><button class="icon-btn" id="close-ranking" aria-label="랭킹 닫기">×</button></div><h2>오늘의 눈썰미.</h2><div id="ranking-list"></div><p class="dialog-note">이 브라우저에 저장된 기록입니다. 난이도별로 순위를 매겨요.</p></dialog>
+  <div class="small-screen-notice" id="small-screen-notice"><span class="wordmark">AIMS</span><h2>가로 화면에서 만나요.</h2><p>이 게임은 PC와 대형 모니터용이에요.<br>창을 넓히거나 기기를 가로로 돌려주세요.</p></div>
+</body>
+</html>

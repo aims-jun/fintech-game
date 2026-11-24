@@ -1,0 +1,41 @@
+/* Printed form photographs: type and hitboxes scale with the same native sheet. */
+.photo-document-form.document-v4 .photo-cell .field-value,
+.photo-document-form.document-v4 .photo-cell .manual-field {
+  font-size:calc(var(--photo-value,28px) * var(--photo-scale));
+  font-weight:400;line-height:1;letter-spacing:-.025em;
+  padding:0 calc(3px * var(--photo-scale));
+  white-space:nowrap;overflow:visible;
+}
+.photo-document-form.document-v4 .form-photo-label {
+  display:flex;align-items:center;justify-content:center;
+  font-size:calc(var(--photo-label-size,24px) * var(--photo-scale));
+  line-height:1.15;letter-spacing:-.025em;font-weight:400;
+  white-space:nowrap;overflow:hidden;pointer-events:none;
+}
+.photo-document-form.document-v4 .form-label-wrap {white-space:normal;line-height:1.05}
+.photo-document-form.document-v4 .form-label-left {justify-content:flex-start;text-align:left}
+.photo-document-form.document-v4 .form-label-replacement {
+  background:#f5f4f1;color:#111;font-weight:700;
+}
+.photo-document-form.document-v4 .photo-cell .field-value.selected::after {
+  width:calc(32px * var(--photo-scale));height:calc(32px * var(--photo-scale));
+  margin-top:calc(-16px * var(--photo-scale));left:calc(-12px * var(--photo-scale));
+  font-size:calc(20px * var(--photo-scale));
+}
+.photo-document-form.document-v4 .form-photo-fiction {
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+/* A landscape expense ledger needs more width than its companion sheet. */
+@media (min-width:900px) {
+  .documents:has(> .paper-slot:first-child > .photo-document-detail),
+  #manual-documents:has(> .photo-document-detail:first-child),
+  #casebook-documents:has(> .photo-document-detail:first-child) {
+    grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);
+  }
+  .documents:has(> .paper-slot:nth-child(2) > .photo-document-detail),
+  #manual-documents:has(> .photo-document-detail:nth-child(2)),
+  #casebook-documents:has(> .photo-document-detail:nth-child(2)) {
+    grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);
+  }
+}

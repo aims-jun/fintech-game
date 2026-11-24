@@ -1,0 +1,116 @@
+/* Photo and ordinary HTML buttons live on the same fitted rectangle. */
+.paper.document-v4.photo-document,
+.mini-document.document-v4.photo-document,
+.casebook-dialog .mini-document.document-v4.photo-document,
+.paper.document-v4.printed-document,
+.mini-document.document-v4.printed-document,
+.casebook-dialog .mini-document.document-v4.printed-document {
+  display:block;width:100%;height:100%;min-width:0;min-height:0;padding:0;gap:0;
+  border:0;background:transparent;box-shadow:none;overflow:hidden;grid-template-rows:none;
+}
+.paper-slot:has(> :is(.photo-document,.printed-document))::before,
+.paper-slot:has(> :is(.photo-document,.printed-document))::after {display:none}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-viewport {
+  display:block;position:relative;width:100%;height:100%;min-width:0;min-height:0;
+  overflow:hidden;isolation:isolate;background:transparent;outline-offset:-2px;
+}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-canvas {
+  --photo-scale:.35;position:absolute;left:0;top:0;width:100%;height:100%;
+  min-width:0;min-height:0;pointer-events:none;
+}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-image,
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-overlay {
+  display:block;position:absolute;inset:0;width:100%;height:100%;max-width:none;
+  margin:0;border:0;padding:0;pointer-events:none;user-select:none;
+}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-image {z-index:0;-webkit-user-drag:none}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-overlay {z-index:1}
+:is(.photo-document,.printed-document).document-v4 .photo-field,
+:is(.photo-document,.printed-document).document-v4 .photo-note {position:absolute;margin:0;padding:0;border:0;min-width:0;min-height:0}
+:is(.photo-document,.printed-document).document-v4 .photo-field {pointer-events:auto;overflow:visible}
+:is(.photo-document,.printed-document).document-v4 .photo-cell,
+:is(.photo-document,.printed-document).document-v4 .photo-cell .document-row.print-field {
+  display:block;position:relative;width:100%;height:100%;min-width:0;min-height:0;
+  margin:0;padding:0;border:0;background:transparent;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .field-value,
+:is(.photo-document,.printed-document).document-v4 .photo-cell .manual-field {
+  display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  width:100%;height:100%;min-width:0;min-height:0;margin:0;padding:0 calc(4px * var(--photo-scale));
+  border:0;border-radius:1px;background:#fffffa28;color:#22241f;
+  box-shadow:inset 0 -1px #47513e55;
+  font-family:Arial,'Apple SD Gothic Neo','Noto Sans CJK KR',Arial,sans-serif;
+  font-size:calc(var(--photo-value,26px) * var(--photo-scale));
+  font-weight:400;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow-wrap:normal;text-align:center;text-overflow:clip;
+  pointer-events:auto;touch-action:manipulation;cursor:pointer;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-money .field-value,
+:is(.photo-document,.printed-document).document-v4 .photo-money .manual-field {
+  justify-content:flex-end;text-align:right;
+  font-size:calc(var(--photo-value,26px) * var(--photo-scale));
+}
+:is(.photo-document,.printed-document).document-v4 .photo-text .field-value,
+:is(.photo-document,.printed-document).document-v4 .photo-text .manual-field {justify-content:flex-start;text-align:left}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .manual-value {
+  font:inherit;font-weight:400;color:inherit;white-space:inherit;line-height:inherit;letter-spacing:inherit;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-cell button:disabled {cursor:default;opacity:1}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .document-row:hover .field-value:not(:disabled),
+:is(.photo-document,.printed-document).document-v4 .photo-cell .manual-field:hover:not(:disabled) {
+  background:#e1e5d8c9;box-shadow:inset 0 0 0 1px #68725b;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .field-value.selected,
+:is(.photo-document,.printed-document).document-v4 .photo-cell .manual-field[aria-pressed=true] {
+  background:#e0e4d6e6;box-shadow:inset 0 0 0 1.5px #333b2a;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .field-value.found,
+:is(.photo-document,.printed-document).document-v4 .photo-cell .manual-field.found {
+  color:#fff;background:#30372bed;box-shadow:inset 0 0 0 1.5px #30372b;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .field-value:focus-visible,
+:is(.photo-document,.printed-document).document-v4 .photo-cell .manual-field:focus-visible {outline:2px solid #30372b;outline-offset:-2px}
+:is(.photo-document,.printed-document).document-v4 .photo-cell .field-value.selected::after {
+  width:14px;height:14px;margin-top:-7px;left:-6px;font-size:8px;font-weight:400;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-note {pointer-events:none}
+:is(.photo-document,.printed-document).document-v4 .photo-caption,
+:is(.photo-document,.printed-document).document-v4 .photo-fiction {
+  display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:0;margin:0;
+  color:#4c5045;font-family:Arial,'Apple SD Gothic Neo','Noto Sans CJK KR',sans-serif;
+  font-size:calc(21px * var(--photo-scale));font-weight:400;line-height:1.15;
+  letter-spacing:-.025em;white-space:nowrap;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-small-caption {font-size:calc(17px * var(--photo-scale))}
+:is(.photo-document,.printed-document).document-v4 .photo-fiction {font-size:calc(18px * var(--photo-scale))}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-pharmacy .photo-fiction {font-size:calc(22px * var(--photo-scale))}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-pharmacy .photo-caption {font-size:calc(25px * var(--photo-scale))}
+:is(.photo-document,.printed-document).document-v4 .photo-printed-label {
+  display:block;position:absolute;font-family:Arial,'Apple SD Gothic Neo','Noto Sans CJK KR',sans-serif;
+  font-size:calc(var(--photo-label-size,21px) * var(--photo-scale));font-weight:400;
+  line-height:1;color:#3e4039;white-space:nowrap;pointer-events:none;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-stamp {
+  display:block;position:absolute;padding-top:calc(2px * var(--photo-scale));
+  border:1px solid #a4554c;color:#a4554c;opacity:.65;pointer-events:none;
+  font-family:Arial,'Noto Sans CJK KR',sans-serif;font-size:calc(20px * var(--photo-scale));
+  font-weight:400;line-height:1.05;text-align:center;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-zoom-button {
+  position:absolute;z-index:3;top:7px;right:7px;display:block;min-width:50px;min-height:32px;
+  padding:6px 10px;border:1px solid #666b60;border-radius:4px;color:#272c22;background:#fffff8ed;
+  box-shadow:0 2px 5px #00000015;font:400 11px/1.1 Arial,sans-serif;white-space:nowrap;cursor:pointer;
+}
+:is(.photo-document,.printed-document).document-v4 .photo-zoom-button:hover {background:#e9eddf}
+:is(.photo-document,.printed-document).document-v4 .photo-zoom-button:focus-visible {outline:2px solid #30372b;outline-offset:2px}
+:is(.photo-document,.printed-document).document-v4 .photo-pan-hint {
+  display:none;position:absolute;z-index:2;bottom:8px;left:50%;transform:translateX(-50%);
+  padding:6px 9px;border-radius:3px;background:#fffff2e6;color:#4e5645;
+  font:400 9px/1.2 Arial,sans-serif;white-space:nowrap;pointer-events:none;
+}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-viewport.is-zoomed {cursor:grab;touch-action:none}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-viewport.is-zoomed .photo-pan-hint {display:block}
+:is(.photo-document,.printed-document).document-v4 .receipt-photo-viewport.is-dragging {cursor:grabbing}
+@media(prefers-reduced-motion:no-preference) {
+  :is(.photo-document,.printed-document).document-v4 .photo-cell button {transition:background .12s,box-shadow .12s}
+}
