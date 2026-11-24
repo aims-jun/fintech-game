@@ -31,11 +31,31 @@
   }
   function unlockAudio(){hadInteraction=true;if(!context){const C=window.AudioContext||window.webkitAudioContext;if(C)context=new C();}context?.resume().catch(()=>{});}
   function dispatch(command){return store.dispatch({session:store.getState().session,...command}).catch(error=>{console.error('게임 상태 변경 실패',error);$('footer-note').textContent='상태를 저장하지 못했어요. 운영자 화면을 확인해주세요.';});}
-  function startRace(){if (store.getState().phase !== 'idle' || localScene !== 'tutorial') return; unlockAudio();lastSecond=-1;lastCountdown=-1;lastAi=-1;practice.clear();localScene='home';const state=store.getState();return store.dispatch({type:'start',player:state.player||'관람객',difficulty:state.difficulty,session:bank.createSessionId()});}
+  async function startRace() {
+    const start = $('start-race');
+    const state = store.getState();
+    if (start.disabled || state.phase !== 'idle' || localScene !== 'tutorial') return;
+    start.disabled = true;
+    try {
+      unlockAudio();
+      practice.clear();
+      await dispatch({type:'start', player:state.player || '관람객', difficulty:state.difficulty, session:bank.createSessionId()});
+    } finally {
+      start.disabled = false;
+    }
+  }
+  function sceneFor(phase) {
+    if (phase === 'idle') return localScene;
+    if (phase === 'countdown') return 'countdown-screen';
+    return phase === 'finished' ? 'result' : 'arena';
+  }
   function showScene(name){
     if(name===renderedScene)return;
+    const previous = renderedScene;
     renderedScene=name;
-    for(const id of ['home','tutorial','arena','result'])$(id).hidden=id!==name;
+    for(const id of ['home','tutorial','countdown-screen','arena','result'])$(id).hidden=id!==name;
+    // The documents were prepared offscreen. Fit them at their visible size before paint.
+    if (previous === 'countdown-screen' && name === 'arena') forms.mountPhotos($('documents'));
     if(name==='result' && store.getState().winner==='human')confetti();
     if(name==='home'){$('hero-seconds').textContent=String(store.getState().durationMs/1000);}
   }
@@ -61,12 +81,13 @@
   function render(v){
     if(v.session!==lastSession){cases=bank.forSession(v.session);lastSession=v.session;lastFeedback='';lastSecond=-1;lastCountdown=-1;lastAi=-1;lastScore=-1;renderedDoc='';}
     if(v.phase!=='idle'){localScene='home';if($('ranking-dialog').open)$('ranking-dialog').close();}
-    const scene=v.phase==='idle'?localScene:v.phase==='finished'?'result':'arena';
+    const scene=sceneFor(v.phase);
     showScene(scene);
     const active=['countdown','playing','reveal'].includes(v.phase);
     $('pause-control').hidden=!active;
     $('pause-control').innerHTML=icons[v.paused?'play':'pause'];$('pause-control').setAttribute('aria-label',v.paused?'이어하기':'일시정지');
-    $('countdown-screen').hidden=v.phase!=='countdown';$('pause-screen').hidden=!v.paused;
+    if (v.phase === 'countdown') updateCountdown(v);
+    $('pause-screen').hidden=!v.paused;
     document.body.classList.toggle('paused',v.paused);
     if(active){
       renderDocs(v);
@@ -135,6 +156,12 @@
     $('result-facts').innerHTML=`<span><b>${(v.elapsedMs/1000).toFixed(1)}</b>초</span><span><b>${v.human}/3</b>발견</span><span>${difficulty}</span>`;
     if(win)[523,659,784,1047].forEach((hz,i)=>sound(hz,.27,.04,'sine',i*.12));else sound(294,.3,.025,'sine');
   }
+  function updateCountdown(v) {
+    if (v.countdown === lastCountdown) return;
+    lastCountdown = v.countdown;
+    $('countdown-number').textContent = v.countdown;
+    if (!v.paused) sound(v.countdown === 1 ? 740 : 520, .13, .06, 'sine');
+  }
   function clock(v){
     if(['countdown','playing','reveal'].includes(v.phase)){
       const seconds=v.remainingSeconds;
@@ -149,7 +176,7 @@
       if(v.ai!==lastAi){$('ai-count').innerHTML=v.ai+'<span> / 3</span>';document.querySelectorAll('[data-ai-pip]').forEach(el=>el.classList.toggle('complete',Number(el.dataset.aiPip)<v.ai));lastAi=v.ai;}
       $('ai-status').textContent=v.paused?'잠시 멈춤':v.phase==='reveal'?'정답 확인 중':v.ai===0?'서류 읽는 중...':v.ai===1?'정보 비교 중...':'마지막 확인 중...';
     }
-    if(v.phase==='countdown'&&v.countdown!==lastCountdown){$('countdown-number').textContent=v.countdown;$('countdown-number').classList.remove('beat');void $('countdown-number').offsetWidth;$('countdown-number').classList.add('beat');if(!v.paused)sound(v.countdown===1?740:520,.13,.06,'sine');lastCountdown=v.countdown;}
+    if (v.phase === 'countdown') updateCountdown(v);
   }
   function confetti(){
     if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -194,7 +221,7 @@
   store.subscribe(state=>render(E.view(state,Date.now())));
   function frame(time){
     const raw=store.getState(), v=E.view(raw,Date.now());
-    const wanted=v.phase==='idle'?localScene:v.phase==='finished'?'result':'arena';
+    const wanted=sceneFor(v.phase);
     if(v.phase!==raw.phase||wanted!==renderedScene||renderedDoc!==v.session+'-'+v.round&&wanted==='arena')render(v);
     clock(v);
     if(time-lastTick>100&&!tickBusy&&['countdown','playing','reveal'].includes(raw.phase)&&!raw.paused){lastTick=time;tickBusy=true;store.dispatch({type:'tick',session:raw.session}).finally(()=>{tickBusy=false;});}

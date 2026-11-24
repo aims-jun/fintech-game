@@ -39,10 +39,10 @@ for (const viewport of [{width:1920,height:1080}, {width:720,height:1280}]) {
     await expect(game.locator('.open-fields, [data-photo-zoom], #hint-btn, #field-picker')).toHaveCount(0);
     for (let round = 0; round < 3; round++) {
       await expect(game.locator('#round-label')).toHaveText('ROUND 0' + (round + 1));
-      const needs = await game.locator('body').evaluate(() => {
+      const needs = await game.locator('body').evaluate((_, displayedRound) => {
         const state = JSON.parse(localStorage.getItem('aims-arena-state-v1'));
-        return window.AIMS_CASEBOOK.forSession(state.session)[state.round].needs;
-      });
+        return window.AIMS_CASEBOOK.forSession(state.session)[displayedRound].needs;
+      }, round);
       if (!round) {
         const other = game.locator('[data-field]').filter({visible:true});
         const id = (await other.evaluateAll(els => els.map(el => el.dataset.field))).find(id => !needs.includes(id));
@@ -59,6 +59,38 @@ for (const viewport of [{width:1920,height:1080}, {width:720,height:1280}]) {
     await expect(next.locator('#challenge')).toBeVisible();
   });
 }
+
+test('PAPER RACE keeps the documents hidden through 3, 2, 1 and a pause', async ({ page }) => {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.clock.install({time:new Date('2026-01-01T12:00:00Z')});
+  const game = await choose(page, 'paper');
+  for (const id of ['challenge', 'practice-a', 'practice-b']) await game.locator('#' + id).tap();
+  await page.clock.pauseAt(new Date('2026-01-01T12:00:05Z'));
+  await game.locator('#start-race').tap();
+  const arena = game.locator('#arena');
+  const digit = game.locator('#countdown-number');
+  for (const seconds of [3, 2, 1]) {
+    await expect(digit).toBeVisible();
+    await expect(digit).toHaveText(String(seconds));
+    await expect(arena).toBeHidden();
+    await expect(game.locator('[data-field]:visible')).toHaveCount(0);
+    if (seconds === 2) {
+      await game.locator('#pause-control').tap();
+      await expect(game.locator('#pause-screen')).toBeVisible();
+      await page.clock.fastForward(2000);
+      await expect(digit).toHaveText('2');
+      await expect(arena).toBeHidden();
+      await game.locator('#resume').tap();
+      await expect(game.locator('#pause-screen')).toBeHidden();
+    }
+    await page.clock.fastForward(1000);
+  }
+  await expect(digit).toBeHidden();
+  await expect(arena).toBeVisible();
+  const field = game.locator('[data-field]').first();
+  await field.tap();
+  await expect(field).toHaveAttribute('aria-pressed','true');
+});
 
 test('PAPER RACE times out and hands off once', async ({ page }) => {
   await page.clock.install();
@@ -150,15 +182,14 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
       const back = game.locator('header #menu-back');
       await expect(back).toBeInViewport({ratio:1});
       if (name === 'paper') {
-        const inside = await game.locator('.hero-visual').evaluate(panel => {
+        await expect.poll(() => game.locator('.hero-visual').evaluate(panel => {
           const outer = panel.getBoundingClientRect();
           return [...panel.querySelectorAll('.hero-sheet, .hero-clock')].every(part => {
             const box = part.getBoundingClientRect();
             return box.left >= outer.left && box.right <= outer.right &&
               box.top >= outer.top && box.bottom <= outer.bottom;
           });
-        });
-        expect(inside).toBe(true);
+        })).toBe(true);
       }
       if (name === 'scan') {
         const gaps = await game.locator('.shot-step').evaluateAll(steps => steps.map(step =>
