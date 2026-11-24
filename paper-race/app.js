@@ -8,15 +8,11 @@
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const icons = {
-    sound:'<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4Z"/><path d="M15 8c3 2 3 6 0 8M18 5c5 4 5 10 0 14"/></svg>',
-    muted:'<svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4Z"/><path d="m16 9 5 6m0-6-5 6"/></svg>',
-    fullscreen:'<svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>',
     pause:'<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></svg>',
     play:'<svg viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></svg>'
   };
   let localScene = 'home', renderedScene = '', renderedDoc = '', lastFeedback = '', lastSession = '', lastSecond = -1, lastCountdown = -1, lastAi = -1, lastScore = -1;
   let context = null, muted = false, practice = new Set(), frameId = 0, connectionFrame = 0, tickBusy = false, lastTick = 0, hadInteraction = false;
-  try {muted = localStorage.getItem('aims-arena-muted') === 'true';} catch (_) {}
   const store = E.createStore();
   const kiosk = window.parent !== window && new URLSearchParams(location.search).has('kiosk');
   if (kiosk) {
@@ -34,8 +30,6 @@
     oscillator.connect(volume);volume.connect(context.destination);oscillator.start(at);oscillator.stop(at+duration+.01);
   }
   function unlockAudio(){hadInteraction=true;if(!context){const C=window.AudioContext||window.webkitAudioContext;if(C)context=new C();}context?.resume().catch(()=>{});}
-  function updateSound(){ $('sound-toggle').innerHTML=icons[muted?'muted':'sound'];$('sound-toggle').setAttribute('aria-label',muted?'소리 켜기':'소리 끄기');$('sound-toggle').title=(muted?'소리 켜기':'소리 끄기')+' · M';$('sound-toggle').setAttribute('aria-pressed',String(!muted));}
-  function toggleSound(){unlockAudio();muted=!muted;try{localStorage.setItem('aims-arena-muted',String(muted));}catch(_){}updateSound();if(!muted)sound(660,.1);}
   function dispatch(command){return store.dispatch({session:store.getState().session,...command}).catch(error=>{console.error('게임 상태 변경 실패',error);$('footer-note').textContent='상태를 저장하지 못했어요. 운영자 화면을 확인해주세요.';});}
   function startRace(){if (store.getState().phase !== 'idle' || localScene !== 'tutorial') return; unlockAudio();lastSecond=-1;lastCountdown=-1;lastAi=-1;practice.clear();localScene='home';const state=store.getState();return store.dispatch({type:'start',player:state.player||'관람객',difficulty:state.difficulty,session:bank.createSessionId()});}
   function showScene(name){
@@ -48,71 +42,12 @@
   function documentHTML(doc,index,peer){
     return forms.render(doc,{side:index,mode:'player',peer});
   }
-  const picker = $('field-picker');
-  let pickerFields = [], pickerPage = 0;
-  function openFields(slot, doc) {
-    const buttons = [...slot.querySelectorAll('[data-field]')];
-    if (!buttons.some(button => !button.disabled)) return;
-    const byId = new Map(buttons.map(button => [button.dataset.field, button]));
-    const rows = doc.rows.map(row => byId.get(row.id)).filter(Boolean);
-    pickerFields = [...new Set([...rows, ...buttons])];
-    pickerPage = 0;
-    $('field-picker-title').textContent = doc.title;
-    renderFields();
-    picker.showModal();
-  }
-  function renderFields() {
-    const size = innerHeight < 500 ? 4 : 6;
-    const pages = Math.max(1, Math.ceil(pickerFields.length / size));
-    pickerPage = Math.max(0, Math.min(pickerPage, pages - 1));
-    $('field-options').replaceChildren(...pickerFields.slice(pickerPage * size, (pickerPage + 1) * size).map(source => {
-      const option = document.createElement('button');
-      option.type = 'button';
-      option.className = 'field-option';
-      option.setAttribute('aria-pressed', source.getAttribute('aria-pressed'));
-      const label = document.createElement('span'), value = document.createElement('strong');
-      label.textContent = source.parentElement.querySelector('.field-description').textContent;
-      value.textContent = source.dataset.value;
-      option.append(label, value);
-      option.addEventListener('click', () => {
-        picker.close();
-        if (source.isConnected && !source.disabled) source.click();
-      });
-      return option;
-    }));
-    $('field-page').textContent = (pickerPage + 1) + ' / ' + pages;
-    $('field-prev').disabled = pickerPage === 0;
-    $('field-next').disabled = pickerPage === pages - 1;
-  }
-  $('field-close').addEventListener('click', () => picker.close());
-  $('field-prev').addEventListener('click', () => { pickerPage--; renderFields(); });
-  $('field-next').addEventListener('click', () => { pickerPage++; renderFields(); });
-  window.addEventListener('resize', () => { if (picker.open) renderFields(); });
   function renderDocs(v){
     const key=v.session+'-'+v.round;
     if(key===renderedDoc)return;
     renderedDoc=key;
     const current=cases[v.round];
     $('doc-left').innerHTML=documentHTML(current.docs[0],0,current.docs[1]);$('doc-right').innerHTML=documentHTML(current.docs[1],1,current.docs[0]);
-    if (kiosk) {
-      for (const [index, slot] of [...$('documents').querySelectorAll('.paper-slot')].entries()) {
-        const tools = document.createElement('div');
-        tools.className = 'paper-tools';
-        const choose = document.createElement('button');
-        choose.type = 'button';
-        choose.className = 'open-fields';
-        choose.textContent = '항목 크게 보기';
-        choose.setAttribute('aria-label', current.docs[index].title + ' 항목 크게 보기');
-        choose.addEventListener('click', () => openFields(slot, current.docs[index]));
-        tools.append(choose);
-        const zoom = document.createElement('button');
-        zoom.type = 'button';
-        zoom.className = 'photo-zoom-button';
-        zoom.dataset.photoZoom = '';
-        tools.append(zoom);
-        slot.prepend(tools);
-      }
-    }
     forms.mountPhotos($('documents'));
     $('mission-title').textContent=current.title;$('round-label').textContent='ROUND 0'+(v.round+1);$('round-category').textContent=current.label;
     $('mission-instruction').textContent=current.instruction;
@@ -124,7 +59,6 @@
     document.querySelectorAll('.document-row').forEach(row=>row.addEventListener('click',event=>{if(!event.target.closest('button'))row.querySelector('button').click();}));
   }
   function render(v){
-    if (picker.open && (!v.canSelect || renderedDoc !== v.session + '-' + v.round)) picker.close();
     if(v.session!==lastSession){cases=bank.forSession(v.session);lastSession=v.session;lastFeedback='';lastSecond=-1;lastCountdown=-1;lastAi=-1;lastScore=-1;renderedDoc='';}
     if(v.phase!=='idle'){localScene='home';if($('ranking-dialog').open)$('ranking-dialog').close();}
     const scene=v.phase==='idle'?localScene:v.phase==='finished'?'result':'arena';
@@ -145,8 +79,6 @@
         button.disabled=!v.canSelect;button.classList.toggle('selected',order>=0);button.classList.toggle('second',order===1);button.classList.toggle('found',v.phase==='reveal'&&order>=0);button.setAttribute('aria-pressed',String(order>=0));
       });
       $('selection-one').classList.toggle('on',v.selected.length>=1);$('selection-two').classList.toggle('on',v.selected.length>=2);
-      $('hint-btn').disabled=!v.canHint;
-      $('hint-btn').innerHTML=v.hinted?'힌트 사용 중':'힌트';
       if(lastScore!==v.score){$('live-score').textContent=v.score.toLocaleString();$('live-score').classList.remove('score-pop');void $('live-score').offsetWidth;$('live-score').classList.add('score-pop');lastScore=v.score;}
       const current=cases[v.round], fb=v.feedback;
       const feedbackKey=v.session+'-'+v.round+'-'+(fb?.kind||'')+'-'+(fb?.at||0);
@@ -157,13 +89,12 @@
           $('round-feedback').textContent='선택한 두 칸은 이번 비교 항목이 아니에요. 다시 선택하세요.';$('round-feedback').classList.add('error');
           const el=document.querySelector(`[data-field="${CSS.escape(fb.id)}"]`);el?.closest('.document-row').classList.remove('wrong');if(el){void el.offsetWidth;el.closest('.document-row').classList.add('wrong');}
           sound(155,.14,.045,'triangle');
-        } else if(fb?.kind==='hint'){$('round-feedback').textContent=current.hint;sound(520,.08,.025);}
-        else if(fb?.kind==='found'){
+        } else if(fb?.kind==='found'){
           $('round-feedback').textContent=current.reveal+' · '+current.explanation;$('round-feedback').classList.add('success');
           $('documents').classList.add('correct');scheduleConnection();
           [523,659,784].forEach((hz,i)=>sound(hz,.16,.04,'sine',i*.075));
         } else {
-          $('round-feedback').textContent=v.hinted?current.hint:v.selected.length?'첫 번째 선택 완료! 다른 서류에서 비교할 칸을 눌러주세요.':'안내된 항목 두 곳을 눌러 비교하세요.';
+          $('round-feedback').textContent=v.selected.length?'첫 번째 선택 완료! 다른 서류에서 비교할 칸을 눌러주세요.':'안내된 항목 두 곳을 눌러 비교하세요.';
           if(fb?.kind==='selected')sound(v.selected.length?440:330,.04,.025,'sine');
         }
       }
@@ -231,10 +162,15 @@
     $('ranking-list').innerHTML=['normal','easy','hard'].map(level=>{const rows=E.rank(results.filter(r=>r.difficulty===level)).slice(0,5);if(!rows.length)return '';return `<h3 style="font-size:11px;color:#879771;margin:22px 0 8px">${{normal:'보통 · 45초',easy:'여유롭게 · 60초',hard:'빠르게 · 32초'}[level]}</h3>`+rows.map((r,i)=>`<div class="ranking-row"><span class="place">${String(i+1).padStart(2,'0')}</span><span class="rank-name">${esc(r.name)} <small>${r.won?'WIN':''}</small></span><b>${r.score.toLocaleString()}</b></div>`).join('');}).join('')||'<p class="rank-empty">첫 번째 기록의 주인공이 되어보세요.</p>';
     $('ranking-dialog').showModal();
   }
-  async function fullscreen(){try{const screen=kiosk?parent.document:document;if(screen.fullscreenElement)await screen.exitFullscreen();else await screen.documentElement.requestFullscreen();}catch(_){$('footer-note').textContent='브라우저 메뉴에서 전체화면을 켤 수 있어요.';}}
-  $('fullscreen').innerHTML=icons.fullscreen;$('fullscreen').addEventListener('click',fullscreen);
+  GameControls.mount({
+    soundButton: $('sound-toggle'), fullscreenButton: $('fullscreen'), screen: kiosk ? parent.document : document,
+    onSound(enabled, tapped) {
+      muted = !enabled;
+      if (enabled && tapped) { unlockAudio(); sound(780, .08); }
+    },
+    onError(message) { $('footer-note').textContent = message; }
+  });
   if (!kiosk) $('home-mark').addEventListener('click',event=>{event.preventDefault();localScene='home';dispatch({type:'reset'});});
-  $('sound-toggle').addEventListener('click',toggleSound);updateSound();
   $('challenge').addEventListener('click',()=>{unlockAudio();practice.clear();for(const key of ['a','b'])$('practice-'+key).classList.remove('chosen');$('practice-feedback').textContent='두 곳을 누르면 한 문제 완료.';localScene='tutorial';render(E.view(store.getState(),Date.now()));});
   $('back-home').addEventListener('click',()=>{localScene='home';render(E.view(store.getState(),Date.now()));});
   $('practice-a').addEventListener('click',()=>practiceClick('a'));$('practice-b').addEventListener('click',()=>practiceClick('b'));
@@ -244,18 +180,16 @@
     if (kiosk) window.parent.postMessage({aimsKiosk:'home'}, location.origin);
   });
   $('pause-control').addEventListener('click',()=>dispatch({type:'pause'}));$('resume').addEventListener('click',()=>{unlockAudio();dispatch({type:'pause'});});
-  $('hint-btn').addEventListener('click',()=>{const v=E.view(store.getState(),Date.now());dispatch({type:'hint',round:v.round,session:v.session});});
   $('show-ranking')?.addEventListener('click',ranking);$('close-ranking').addEventListener('click',()=>$('ranking-dialog').close());
   $('ranking-dialog').addEventListener('click',e=>{if(e.target===$('ranking-dialog')){const b=e.target.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)e.target.close();}});
   window.addEventListener('keydown',e=>{
     if(e.target.closest('input,select,textarea')||e.repeat||$('ranking-dialog').open)return;
-    if(e.key.toLowerCase()==='f'){e.preventDefault();fullscreen();}
-    if(e.key.toLowerCase()==='m')toggleSound();
+    if(e.key.toLowerCase()==='f'){e.preventDefault();$('fullscreen').click();}
+    if(e.key.toLowerCase()==='m')$('sound-toggle').click();
     if(e.code==='Space'&&!e.target.closest('button,a,[role="button"]')){e.preventDefault();unlockAudio();const s=store.getState();if(['playing','countdown','reveal'].includes(s.phase))dispatch({type:'pause'});else if(s.phase==='finished'){if(!new URLSearchParams(location.search).has('kiosk'))startRace();}else if(localScene==='tutorial')startRace();else $('challenge').click();}
   });
   $('documents').addEventListener('receiptphotolayout',scheduleConnection);
   window.addEventListener('resize',scheduleConnection);
-  window.addEventListener('storage',event=>{if(event.key==='aims-arena-muted'){muted=event.newValue==='true';updateSound();}});
   $('challenge').disabled = false;
   store.subscribe(state=>render(E.view(state,Date.now())));
   function frame(time){

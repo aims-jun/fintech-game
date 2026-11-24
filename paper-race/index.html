@@ -12,19 +12,21 @@
   <link rel="stylesheet" href="../assets/kiosk.css">
   <link rel="stylesheet" href="touch-controls.css">
   <script defer src="cases.js?v=6.0"></script><script defer src="casebook.js?v=6.0"></script><script defer src="hospital-forms.js?v=6.0"></script><script defer src="receipt-photos.js?v=6.0"></script><script defer src="form-photos.js?v=6.0"></script><script defer src="documents.js?v=6.0"></script><script defer src="engine.js?v=6.0"></script><script defer src="app.js?v=6.0"></script>
+  <link rel="stylesheet" href="../assets/game-controls.css">
+  <script src="../assets/game-controls.js"></script>
 </head>
 <body>
   <div class="app-shell" id="app">
-    <header class="masthead">
+    <header class="masthead game-header">
       <div class="kiosk-brand-group">
-        <button type="button" id="menu-back" aria-label="게임 선택 화면으로" hidden><span class="back-icon" aria-hidden="true">←</span><span class="back-label">게임 선택</span></button>
+        <button type="button" id="menu-back" aria-label="게임 선택 화면으로" hidden><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m10 6-6 6 6 6M4 12h16"/></svg><span class="back-label">게임 선택</span></button>
         <a class="wordmark" id="home-mark" href="#home" aria-label="AIMS 게임 첫 화면"><img src="../assets/aims-logo.png" alt="AIMS" class="inner-brand-image"></a>
       </div>
       <span class="edition">THE PAPER RACE <span class="edition-divider">/</span> FINTECH WEEK</span>
-      <div class="header-actions">
+      <div class="header-actions game-tools">
+        <button class="icon-btn" id="pause-control" title="일시정지 · Space" aria-label="일시정지" hidden></button>
         <button class="icon-btn" id="sound-toggle" title="소리 켜기 · M" aria-label="소리 켜기" aria-pressed="false"></button>
         <button class="icon-btn" id="fullscreen" title="전체화면 · F" aria-label="전체화면"></button>
-        <button class="icon-btn" id="pause-control" title="일시정지 · Space" aria-label="일시정지" hidden></button>
       </div>
     </header>
     <main id="stage" class="stage">
@@ -85,7 +87,7 @@
         </div>
         <div class="mission-heading"><div class="mission-copy"><div class="mission-kicker"><span id="round-label">ROUND 01</span><i></i><span id="round-category">날짜</span></div><h1 id="mission-title"></h1></div><div class="selection-guide"><span class="selection-pips"><i id="selection-one"></i><i id="selection-two"></i></span><p id="mission-instruction"></p></div></div>
         <div class="documents" id="documents"><div class="paper-slot" id="doc-left"></div><div class="paper-slot" id="doc-right"></div><svg class="evidence-lines" id="evidence-lines" aria-hidden="true"></svg><div class="found-seal" id="found-seal" aria-hidden="true"><span>✓</span><b>찾았다!</b><small>EVIDENCE FOUND</small></div></div>
-        <div class="arena-bottom"><div class="round-feedback" id="round-feedback" role="status">두 값을 골라주세요.</div><button class="text-btn hint-btn" id="hint-btn">힌트</button><div class="live-score" aria-label="현재 점수"><span>점수</span><strong id="live-score">0</strong><small>점</small></div></div>
+        <div class="arena-bottom"><div class="round-feedback" id="round-feedback" role="status">두 값을 골라주세요.</div><div class="live-score" aria-label="현재 점수"><span>점수</span><strong id="live-score">0</strong><small>점</small></div></div>
       </section>
 
       <section id="result" class="scene result-scene" hidden aria-labelledby="result-title">
@@ -99,11 +101,6 @@
     </main>
     <footer class="page-footer"><span id="footer-note">가상 서류 · AI 상대는 게임용 시뮬레이션입니다.</span></footer>
   </div>
-  <dialog id="field-picker" class="field-picker" aria-labelledby="field-picker-title">
-    <header><h2 id="field-picker-title"></h2><button id="field-close" type="button">닫기</button></header>
-    <div id="field-options" class="field-options"></div>
-    <footer><button id="field-prev" type="button">‹ 이전</button><span id="field-page" aria-live="polite"></span><button id="field-next" type="button">다음 ›</button></footer>
-  </dialog>
   <dialog id="ranking-dialog" class="ranking-dialog"><div class="dialog-top"><span class="eyebrow">LOCAL LEADERBOARD</span><button class="icon-btn" id="close-ranking" aria-label="랭킹 닫기">×</button></div><h2>오늘의 눈썰미.</h2><div id="ranking-list"></div><p class="dialog-note">이 브라우저에 저장된 기록입니다. 난이도별로 순위를 매겨요.</p></dialog>
 
 </body>

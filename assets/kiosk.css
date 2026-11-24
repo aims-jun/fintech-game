@@ -28,16 +28,6 @@
   cursor: pointer;
   touch-action: manipulation;
 }
-.back-icon {
-  display: grid;
-  place-items: center;
-  width: 1.85em;
-  height: 1.85em;
-  border: 1px solid #c5c5be;
-  border-radius: 50%;
-  font-size: 1.25em;
-}
-#menu-back:active .back-icon { background: #242520; color: white; }
 #menu-back:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 @media (max-width: 750px) {
   .back-label { display: none; }

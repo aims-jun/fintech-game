@@ -154,25 +154,13 @@
       node.classList.toggle('is-done', Boolean(shot));
       node.classList.toggle('is-perfect', Boolean(shot && E.isStageCleared(shot)));
       node.querySelector('.step-number').textContent = shot ? (E.isStageCleared(shot) ? '✓' : '×') : String(i + 1);
-      node.querySelector('.step-score').textContent = shot ? (E.isStageCleared(shot) ? '성공' : '실패') : '';
       node.setAttribute('aria-label', `${i + 1}단계 ${LABELS[i]}${shot ? ', ' + (E.isStageCleared(shot) ? '성공' : '실패') : ''}`);
     });
-  }
-  function soundUI() {
-    $('sound').setAttribute('aria-pressed', String(state.sound));
-    $('sound').setAttribute('aria-label', state.sound ? '소리 끄기' : '소리 켜기');
   }
   function focusGameplay() {
     if (state.modal) return;
     const primary = paper.disabled ? game : paper;
     primary.focus({ preventScroll: true });
-  }
-  function toggleSound() {
-    state.sound = !state.sound;
-    records.setSound(state.sound);
-    soundUI(); sound.unlock(); sound.tone(780, .08);
-    displayToast(state.sound ? '소리 켜짐' : '소리 꺼짐');
-    focusGameplay();
   }
   function updateScorePanel() {
     $('live-score').textContent = `${state.shots.filter(E.isStageCleared).length} / 3`;
@@ -402,17 +390,6 @@
     if (state.phase === 'home') start();
     else if (state.phase === 'round') capture(now());
   }
-  function toggleFullscreen() {
-    focusGameplay();
-    try {
-      const screen = kiosk ? parent.document : document;
-      const entering = !screen.fullscreenElement && !screen.webkitFullscreenElement;
-      const operation = entering ? (screen.documentElement.requestFullscreen || screen.documentElement.webkitRequestFullscreen) : (screen.exitFullscreen || screen.webkitExitFullscreen);
-      if (!operation) { displayToast('브라우저 메뉴에서 전체 화면을 켜주세요.'); return; }
-      const result = operation.call(entering ? screen.documentElement : screen);
-      result?.catch?.(() => displayToast('브라우저 메뉴에서 전체 화면을 켜주세요.'));
-    } catch { displayToast('브라우저 메뉴에서 전체 화면을 켜주세요.'); }
-  }
   function frame(instant) {
     if (!state.running) return;
     if (state.toastUntil && instant >= state.toastUntil) { $('toast').hidden = true; state.toastUntil = 0; }
@@ -444,8 +421,8 @@
     if (event.key === 'Escape') {
       event.preventDefault();
       if (state.modal) closeModal(true); else pause();
-    } else if (event.key.toLowerCase() === 'f') { event.preventDefault(); toggleFullscreen(); }
-    else if (event.key.toLowerCase() === 'm') { event.preventDefault(); toggleSound(); }
+    } else if (event.key.toLowerCase() === 'f') { event.preventDefault(); $('fullscreen').click(); }
+    else if (event.key.toLowerCase() === 'm') { event.preventDefault(); $('sound').click(); }
     else if (event.key === 'Tab' && state.modal) {
       const focusables = [...$('modal').querySelectorAll('button:not([hidden])')].filter(el => !el.disabled);
       const first = focusables[0], last = focusables[focusables.length - 1];
@@ -477,15 +454,23 @@
   window.visualViewport?.addEventListener('resize', resize);
   if (window.ResizeObserver) new ResizeObserver(resize).observe(arena);
   document.fonts?.ready?.then(resize);
-  document.addEventListener('fullscreenchange', () => {
-    $('fullscreen').setAttribute('aria-label', document.fullscreenElement ? '전체 화면 나가기' : '전체 화면'); resize();
-  });
   $('replay').addEventListener('click', () => {
     if (kiosk) window.parent.postMessage({aimsKiosk:'home'}, location.origin);
     else showHome();
   });
-  $('sound').addEventListener('click', toggleSound);
-  $('fullscreen').addEventListener('click', toggleFullscreen);
+  GameControls.mount({
+    soundButton: $('sound'), fullscreenButton: $('fullscreen'), screen: kiosk ? parent.document : document,
+    onSound(enabled, tapped) {
+      state.sound = enabled;
+      if (tapped) {
+        records.setSound(enabled);
+        sound.unlock(); sound.tone(780, .08);
+        displayToast(enabled ? '소리 켜짐' : '소리 꺼짐');
+        focusGameplay();
+      }
+    },
+    onError: displayToast
+  });
   $('help').addEventListener('click', () => openModal('help'));
   $('history').addEventListener('click', () => openModal('history'));
   $('resume').addEventListener('click', () => closeModal(true));
@@ -495,7 +480,7 @@
   window.addEventListener('pagehide', () => { pause(); state.running = false; cancelAnimationFrame(state.frameId); });
   window.addEventListener('pageshow', () => { if (!state.running) { state.running = true; state.frameId = requestAnimationFrame(frame); } });
 
-  makeReceipt(); soundUI(); showHome();
+  makeReceipt(); showHome();
   state.frameId = requestAnimationFrame(frame);
 
   // Game Center bridge: the spectator iframe is the only active game instance.

@@ -107,12 +107,7 @@
           ? Object.assign({}, next, { paused: false, pausedAt: null, phaseStartedAt: next.phaseStartedAt + Math.max(0, now - next.pausedAt) })
           : Object.assign({}, next, { paused: true, pausedAt: now });
       } else if (!next.paused && !staleRound && next.phase === 'playing') {
-        if (command.type === 'hint' && next.hintedRound !== next.round) {
-          next = Object.assign({}, next, {
-            hintedRound: next.round, hints: next.hints + 1, score: Math.max(0, next.score - 150),
-            feedback: { kind: 'hint', id: typeof command.id === 'string' ? command.id : null, at: now }
-          });
-        } else if (command.type === 'select' && typeof command.id === 'string' && command.id &&
+        if (command.type === 'select' && typeof command.id === 'string' && command.id &&
           Array.isArray(command.needs) && command.needs.length === 2 &&
           command.needs.every(function (id) { return typeof id === 'string' && id; }) && command.needs[0] !== command.needs[1]) {
           var selected = next.selected.indexOf(command.id) >= 0
@@ -157,8 +152,7 @@
       countdown: Math.ceil(countdownMs / 1000), countdownMs: countdownMs, revealMs: revealMs,
       ai: progress >= 1 ? 3 : progress >= 0.66 ? 2 : progress >= 0.32 ? 1 : 0,
       aiProgress: progress, humanProgress: current.human / 3,
-      canSelect: canSelect, canHint: canSelect && current.hintedRound !== current.round,
-      hinted: current.hintedRound === current.round
+      canSelect: canSelect
     });
   }
 

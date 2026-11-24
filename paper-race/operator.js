@@ -162,8 +162,6 @@
       button.classList.toggle('found', selected && view.phase === 'reveal');
     });
     $('selection-counter').textContent = view.selected.length + ' / 2 선택';
-    $('hint-btn').disabled = !view.canHint;
-    $('hint-btn').innerHTML = view.hinted ? '힌트 사용함' : '힌트 표시';
     const feedback = view.feedback;
     let message;
     if (view.phase === 'idle') message = '경기가 시작되면 서류의 모든 값을 선택할 수 있어요.';
@@ -172,7 +170,6 @@
     else if (view.phase === 'finished') message = view.winner === 'human' ? '세 단서를 모두 찾았어요. 다음 참가자를 준비해주세요.' : '경기가 끝났어요. 다음 도전을 준비해주세요.';
     else if (feedback?.kind === 'found') message = current.reveal + ' · ' + current.explanation;
     else if (feedback?.kind === 'wrong') message = '선택한 두 칸은 비교 대상이 아니에요. 안내된 항목을 다시 골라주세요.';
-    else if (view.hinted) message = current.hint;
     else message = view.selected.length ? '한 곳을 선택했어요. 함께 비교할 나머지 한 곳을 눌러주세요.' : '이름이나 숫자가 적힌 칸을 눌러주세요.';
     $('round-feedback').textContent = message;
     $('round-feedback').className = !view.paused && feedback?.kind === 'wrong' ? 'error' : feedback?.kind === 'found' ? 'success' : '';
@@ -181,7 +178,6 @@
     if (!firstRender && !view.paused && feedbackKey !== lastFeedback) {
       if (feedback?.kind === 'selected') sound(view.selected.length ? 440 : 330, .04);
       else if (feedback?.kind === 'wrong') sound(155, .14, .04, 0, 'triangle');
-      else if (feedback?.kind === 'hint') sound(520, .08, .025);
       else if (feedback?.kind === 'found') [523, 659, 784].forEach((frequency, index) => sound(frequency, .16, .035, index * .075));
     }
     lastFeedback = feedbackKey;
@@ -230,7 +226,7 @@
     $('reset-btn').disabled = view.phase === 'idle';
     $('round-stat').innerHTML = (view.phase === 'idle' ? '—' : '0' + (view.round + 1)) + '<small> / 03</small>';
     $('score-stat').innerHTML = view.score.toLocaleString() + '<small> PTS</small>';
-    $('attempt-stat').innerHTML = view.errors + '<small> / </small>' + view.hints;
+    $('attempt-stat').textContent = view.errors;
     $('human-fill').style.width = view.humanProgress * 100 + '%';
     $('human-count').textContent = view.human + ' / 3';
     renderDocuments(view);
@@ -369,11 +365,6 @@
   radios.forEach(radio => radio.addEventListener('change', persistDraft));
   $('pause-btn').addEventListener('click', togglePause);
   $('reset-btn').addEventListener('click', () => dispatch({ type:'reset', session:store.getState().session }));
-  $('hint-btn').addEventListener('click', () => {
-    unlockAudio();
-    const view = E.view(store.getState(), Date.now());
-    if (view.canHint) dispatch({ type:'hint', session:view.session, round:view.round });
-  });
   $('manual-documents').addEventListener('click', event => {
     const button = event.target?.closest?.('[data-field]');
     if (!button || button.disabled || !Number.isInteger(Number(button.dataset.round))) return;

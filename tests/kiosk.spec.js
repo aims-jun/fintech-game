@@ -36,11 +36,7 @@ for (const viewport of [{width:1920,height:1080}, {width:720,height:1280}]) {
   test('PAPER RACE completes three pairs at ' + viewport.width, async ({ page }) => {
     await page.setViewportSize(viewport);
     const game = await startPaper(page);
-    const zoom = game.locator('[data-photo-zoom]').first();
-    await zoom.tap();
-    await expect(zoom).toHaveAttribute('aria-pressed', 'true');
-    await zoom.tap();
-    await game.locator('#hint-btn').tap();
+    await expect(game.locator('.open-fields, [data-photo-zoom], #hint-btn, #field-picker')).toHaveCount(0);
     for (let round = 0; round < 3; round++) {
       await expect(game.locator('#round-label')).toHaveText('ROUND 0' + (round + 1));
       const needs = await game.locator('body').evaluate(() => {
@@ -164,6 +160,12 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
         });
         expect(inside).toBe(true);
       }
+      if (name === 'scan') {
+        const gaps = await game.locator('.shot-step').evaluateAll(steps => steps.map(step =>
+          step.querySelector('.step-label').getBoundingClientRect().left -
+          step.querySelector('.step-number').getBoundingClientRect().right));
+        expect(Math.min(...gaps)).toBeGreaterThan(3);
+      }
       for (const body of [page.locator('body'), game.locator('body')]) {
         const size = await body.evaluate(() => {
           const root = document.scrollingElement;
@@ -177,26 +179,25 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
   });
 }
 
-test('large document buttons select the original field and close on timeout', async ({ page }) => {
-  await page.clock.install();
-  const game = await startPaper(page);
-  const slot = game.locator('#doc-left');
-  const open = slot.locator('.open-fields');
-  await open.tap();
-  const option = game.locator('.field-option').first();
-  await expect(option).toBeVisible();
-  const first = await option.textContent();
-  await game.locator('#field-next').tap();
-  await expect(option).not.toHaveText(first);
-  await game.locator('#field-prev').tap();
-  await expect(option).toHaveText(first);
-  await option.tap();
-  await expect(game.locator('#field-picker')).not.toBeVisible();
-  await expect(slot.locator('[data-field][aria-pressed="true"]')).toHaveCount(1);
-  await open.tap();
-  await page.clock.fastForward(46000);
-  await expect(game.locator('#field-picker')).not.toBeVisible();
-  await expect(game.locator('#result-home')).toBeVisible();
+test('sound and fullscreen controls are shared across games', async ({ page }) => {
+  let initialBounds;
+  for (const [gameName, enabled] of [['paper',false], ['scan',true], ['paper',false]]) {
+    const game = await choose(page, gameName);
+    const sound = game.getByRole('button', {name: enabled ? '소리 끄기' : '소리 켜기', exact:true});
+    await expect(sound).toHaveAttribute('aria-pressed', String(enabled));
+    await sound.tap();
+    const full = game.locator('#fullscreen');
+    const bounds = await full.locator('svg').boundingBox();
+    expect(bounds.width).toBeGreaterThan(20);
+    if (initialBounds) expect(bounds).toEqual(initialBounds);
+    initialBounds = bounds;
+    await full.tap();
+    await expect(full).toHaveAccessibleName('전체 화면 나가기');
+    await full.tap();
+    await expect(full).toHaveAccessibleName('전체 화면');
+    await game.locator('#menu-back').tap();
+    await page.locator('#exit-confirm').tap();
+  }
 });
 
 for (const input of ['touch', 'mouse']) {
