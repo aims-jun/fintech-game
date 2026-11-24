@@ -81,18 +81,18 @@ for (const outcome of ['clear', 'miss', 'timeout']) {
     await page.addInitScript(() => { Math.random = () => 0; });
     await page.clock.install({ time: new Date('2026-01-01T10:00:00Z') });
     const game = await choose(page, 'scan');
-    await expect(game.locator('#action')).toBeEnabled();
+    await expect(game.locator('#paper')).toBeEnabled();
     await page.clock.pauseAt(new Date('2026-01-01T10:00:10Z'));
-    await game.locator('#action').tap();
+    await game.locator('#paper').tap();
     await page.clock.fastForward(2400);
-    const arena = game.locator('#arena');
+    const receipt = game.locator('#paper');
     for (let round = 0; round < (outcome === 'clear' ? 3 : 1); round++) {
       await expect(game.locator('#game')).toHaveAttribute('data-phase', 'round');
       if (outcome === 'timeout') {
         await page.clock.fastForward(7501);
       } else {
         if (outcome === 'clear') {
-          const delay = await arena.evaluate((_, index) => {
+          const delay = await receipt.evaluate((_, index) => {
             for (let t = 0; t <= 2700; t++) {
               if (window.OneShotEngine.sample(index, t, 0).error < .005) return t;
             }
@@ -100,14 +100,15 @@ for (const outcome of ['clear', 'miss', 'timeout']) {
           }, round);
           await page.clock.fastForward(delay);
         }
-        await arena.tap();
-        await arena.tap();
+        // Drive the rule checks on the virtual clock. Physical contact and
+        // compositor motion are exercised separately on the browser clock.
+        await receipt.press('Enter');
       }
       await expect(game.locator('#game')).toHaveAttribute('data-phase', 'capture');
       await page.clock.fastForward(1951);
     }
-    await expect(game.locator('#result-title')).toHaveText(outcome === 'clear' ? '최종 클리어!' : '1단계에서 종료');
-    const state = await arena.evaluate(() => window.OneShotApp.inspect());
+    await expect(game.locator('#result-title')).toHaveText(outcome === 'clear' ? '세 번 모두 촬영했어요' : '1단계에서 종료');
+    const state = await receipt.evaluate(() => window.OneShotApp.inspect());
     expect(state.records.plays).toBe(1);
     expect(state.shots).toHaveLength(outcome === 'clear' ? 3 : 1);
     await expect(game.locator('#replay')).toBeInViewport({ratio:1});
@@ -134,13 +135,12 @@ test('staff exit, cancellation and refresh handoff', async ({ page }) => {
 for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,390]]) {
   test('touch viewport ' + width + ' × ' + height, async ({ page }) => {
     await page.setViewportSize({width,height});
-    for (const [name, button] of [['paper','#challenge'],['scan','#action']]) {
+    for (const [name, button] of [['paper','#challenge'],['scan','#paper']]) {
       const card = page.locator('[data-open="' + name + '"]');
       const strip = card.locator('.choice-go');
-      const area = await strip.boundingBox();
       const bounds = await card.boundingBox();
-      expect(area.width).toBeGreaterThan(bounds.width * .95);
-      expect(area.height).toBeGreaterThanOrEqual(52);
+      expect(bounds.height).toBeGreaterThanOrEqual(96);
+      expect(bounds.width).toBeGreaterThanOrEqual(140);
       const target = name === 'paper' ? card.locator('.choice-icon') : strip;
       await target.tap();
       const game = page.frameLocator('#game-frame');
@@ -186,18 +186,51 @@ test('large document buttons select the original field and close on timeout', as
   await expect(game.locator('#result-home')).toBeVisible();
 });
 
-test('shutter button captures at contact before release', async ({ page }) => {
-  const game = await choose(page, 'scan');
-  const action = game.locator('#action');
-  await action.tap();
-  await expect(game.locator('#game')).toHaveAttribute('data-phase', 'round');
-  const rect = await action.boundingBox();
-  const client = await page.context().newCDPSession(page);
-  await client.send('Input.dispatchTouchEvent', {
-    type: 'touchStart',
-    touchPoints: [{x: rect.x + rect.width / 2, y: rect.y + rect.height / 2}],
+for (const input of ['touch', 'mouse']) {
+  test('only the receipt captures on ' + input + ' contact', async ({ page }) => {
+    const game = await choose(page, 'scan');
+    const receipt = game.locator('#paper');
+    await expect(game.locator('#action')).toHaveCount(0);
+    await receipt.tap();
+    await expect(game.locator('#game')).toHaveAttribute('data-phase', 'round');
+    const arena = await game.locator('#arena').boundingBox();
+    await page.touchscreen.tap(arena.x + 8, arena.y + 8);
+    expect(await receipt.evaluate(() => window.OneShotApp.inspect().shots)).toHaveLength(0);
+    const rect = await receipt.boundingBox();
+    const point = {x:rect.x + rect.width / 2, y:rect.y + rect.height / 2};
+    if (input === 'mouse') {
+      await page.mouse.move(point.x, point.y);
+      await page.mouse.down();
+      await expect(game.locator('#game')).toHaveAttribute('data-phase','capture');
+      await page.mouse.up();
+    } else {
+      const client = await page.context().newCDPSession(page);
+      await client.send('Input.dispatchTouchEvent', {type:'touchStart',touchPoints:[point]});
+      await expect(game.locator('#game')).toHaveAttribute('data-phase','capture');
+      await client.send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
+    }
+    expect(await receipt.evaluate(() => window.OneShotApp.inspect().shots)).toHaveLength(1);
   });
-  await expect(game.locator('#game')).toHaveAttribute('data-phase', 'capture');
-  await client.send('Input.dispatchTouchEvent', {type:'touchEnd', touchPoints:[]});
-  expect(await action.evaluate(() => window.OneShotApp.inspect().shots)).toHaveLength(1);
+}
+
+test('receipt motion and scoring stay in sync after pause and resize', async ({ page }) => {
+  const game = await choose(page, 'scan');
+  const receipt = game.locator('#paper');
+  await receipt.tap();
+  await expect(game.locator('#game')).toHaveAttribute('data-phase', 'round');
+  await game.locator('#help').tap();
+  const remaining = () => receipt.evaluate(() => window.OneShotApp.inspect().remainingMs);
+  const pausedAt = await remaining();
+  await page.setViewportSize({width:1280, height:800});
+  await expect(game.locator('#resume')).toBeInViewport({ratio:1});
+  expect(await remaining()).toBe(pausedAt);
+  await game.locator('#resume').tap();
+  const clockDifference = await receipt.evaluate(el => new Promise(resolve => {
+    requestAnimationFrame(() => {
+      const motion = el.getAnimations().find(a => a.effect.getTiming().iterations === Infinity);
+      const elapsed = window.OneShotEngine.ROUND_MS - window.OneShotApp.inspect().remainingMs;
+      resolve(Math.abs(motion.currentTime - elapsed));
+    });
+  }));
+  expect(clockDifference).toBeLessThan(50);
 });

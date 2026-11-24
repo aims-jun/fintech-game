@@ -7,8 +7,8 @@
   const kiosk = window.parent !== window && new URLSearchParams(location.search).has('kiosk');
   const now = () => performance.now();
   const COUNTDOWN_MS = 2400, CAPTURE_MS = 1950;
-  const TITLES = ['1단계 · 위치 맞추기', '2단계 · 각도 맞추기', '3단계 · 최종 스캔'];
-  const HINTS = ['천천히 움직입니다. 가운데에서 터치', '조금 더 빠릅니다. 똑바로 설 때 터치', '최종 단계. 테두리와 정확하게 맞는 순간 터치'];
+  const TITLES = ['위치 맞추기', '각도 맞추기', '크기 맞추기'];
+  const HINTS = ['가운데에 오면 영수증을 누르세요.', '똑바로 서면 영수증을 누르세요.', '테두리와 크기가 같아지면 영수증을 누르세요.'];
   const LABELS = ['위치', '각도', '크기'];
   const RECEIPT = ({
     number: 'R-0612-032', days: '3일', patient: '홍길동', date: '2026.06.12',
@@ -19,7 +19,6 @@
   let storage;
   try { storage = window.localStorage; } catch { storage = null; }
   const records = new window.OneShotStorage.RecordStore(storage);
-  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches || false;
   const state = {
     phase: 'home', phaseAt: now(), roundIndex: 0, seed: 0, shots: [], clock: null,
     spaceDown: false, lastTick: -1, lastCount: -1, captureAligned: false, scanStarted: false,
@@ -28,7 +27,9 @@
     toastUntil: 0, running: true, frameId: 0
   };
   let fit = L.fitStage(1100, 420);
-  const game = $('game'), arena = $('arena'), paper = $('paper'), action = $('action');
+  const game = $('game'), arena = $('arena'), paper = $('paper');
+  const timeLabel = $('time'), dial = $('dial-value');
+  let motion = null, lastTenth = -1;
   const stepNodes = [...document.querySelectorAll('.shot-step')];
 
   const sound = {
@@ -70,6 +71,10 @@
     state.phase = phase;
     state.phaseAt = instant;
     game.dataset.phase = phase;
+    paper.disabled = phase !== 'home' && phase !== 'round';
+    paper.setAttribute('aria-label', phase === 'home' ? '영수증을 눌러 시작' : '영수증 촬영');
+    motion?.cancel();
+    motion = null;
   }
   function displayToast(text) {
     $('toast').textContent = text;
@@ -115,14 +120,32 @@
     arena.style.setProperty('--paper-w', fit.paperWidth.toFixed(3) + 'px');
     arena.style.setProperty('--paper-h', fit.paperHeight.toFixed(3) + 'px');
     arena.style.setProperty('--paper-type', (fit.paperWidth / 1086 * 31).toFixed(3) + 'px');
-    if (state.phase === 'round') applyPose(state.roundIndex, state.clock.snapshot(now()).value);
+    if (state.phase === 'round') animateRound();
+    else if (state.phase === 'paused' && state.previousPhase === 'round') {
+      applyPose(state.roundIndex, state.clock.snapshot(now()).value);
+    }
+  }
+  function transform(round, value) {
+    const {x, angle, scale} = L.transformFor(round, value, fit);
+    return `translate(-50%, -50%) translate3d(${x}px, 0, 0) rotate(${angle}deg) scale(${scale})`;
   }
   function applyPose(round, value) {
-    const pose = L.transformFor(round, value, fit);
-    paper.style.setProperty('--dx', pose.x.toFixed(3) + 'px');
-    paper.style.setProperty('--angle', pose.angle.toFixed(3) + 'deg');
-    paper.style.setProperty('--scale', pose.scale.toFixed(5));
-    arena.classList.toggle('is-aligned', state.phase === 'round' && Math.abs(value) <= E.ROUNDS[state.roundIndex].maxError);
+    paper.style.transform = transform(round, value);
+  }
+  function animateRound() {
+    motion?.cancel();
+    motion = null;
+    const round = state.roundIndex;
+    applyPose(round, state.clock.snapshot(now()).value);
+    if (!paper.animate) return;
+    // Sample a full cycle from the scoring engine. The compositor moves the
+    // receipt on the same time origin used for hit scoring and pause/resume.
+    const duration = E.ROUNDS[round].cycleMs;
+    const keyframes = Array.from({length: 121}, (_, i) => ({
+      transform: transform(round, E.sample(round, duration * i / 120, state.seed).value),
+    }));
+    motion = paper.animate(keyframes, {duration, iterations: Infinity, easing: 'linear'});
+    motion.startTime = state.phaseAt;
   }
   function updateSteps() {
     stepNodes.forEach((node, i) => {
@@ -141,7 +164,7 @@
   }
   function focusGameplay() {
     if (state.modal) return;
-    const primary = state.phase === 'result' ? game : !action.disabled ? action : game;
+    const primary = paper.disabled ? game : paper;
     primary.focus({ preventScroll: true });
   }
   function toggleSound() {
@@ -152,9 +175,7 @@
     focusGameplay();
   }
   function updateScorePanel() {
-    const home = state.phase === 'home';
-    $('score-caption').textContent = home ? '3단계 도전' : '단계 진행';
-    $('live-score').textContent = home ? 'READY' : `${state.shots.filter(E.isStageCleared).length} / 3`;
+    $('live-score').textContent = `${state.shots.filter(E.isStageCleared).length} / 3`;
   }
   function showHome() {
     closeModal(false);
@@ -165,15 +186,13 @@
     delete game.dataset.grade;
     game.dataset.round = '1';
     $('play-screen').hidden = false; $('result-screen').hidden = true;
-    $('eyebrow').innerHTML = '<span class="live-dot"></span>3 LEVEL CHALLENGE';
-    $('prompt').innerHTML = '3단계를 모두 통과하세요.';
-    $('subcopy').textContent = '프레임에 맞을 때 화면을 터치';
-    $('arena-label').textContent = 'ALIGN THE RECEIPT';
-    $('action-label').textContent = '시작하기'; action.disabled = false;
-    $('frame-caption').textContent = '이 안에 딱 맞게';
+    $('eyebrow').hidden = true;
+    $('prompt').textContent = '영수증을 눌러 시작하세요';
+    $('subcopy').textContent = '움직이는 영수증이 테두리에 맞으면 눌러 촬영하세요.';
+    applyPose(0, 0);
     updateSteps(); updateScorePanel(); resize();
     focusGameplay();
-    announce('원샷 스캔. 시작하기를 터치하세요.');
+    announce('원샷 스캔. 영수증을 눌러 시작하세요.');
   }
   function start() {
     if (state.phase !== 'home' || state.modal) return;
@@ -189,10 +208,8 @@
     game.classList.remove('scan-active', 'feedback-active');
     delete game.dataset.grade; game.dataset.round = '1';
     $('play-screen').hidden = false; $('result-screen').hidden = true;
-    $('eyebrow').textContent = 'READY FOR YOUR SHOT?';
-    $('prompt').textContent = '터치 준비.';
-    $('subcopy').textContent = '프레임에 맞을 때 화면을 터치';
-    $('action-label').textContent = '준비'; action.disabled = true;
+    $('prompt').textContent = '잠시 후 시작합니다';
+    $('subcopy').textContent = '움직이는 영수증이 테두리에 맞으면 눌러 촬영하세요.';
     updateSteps(); updateScorePanel(); resize(); applyPose(0, 0);
     updateCountdown(instant);
     announce('곧 시작합니다. 첫 번째는 위치를 맞춥니다.');
@@ -215,24 +232,25 @@
     setPhase('round', instant);
     game.classList.remove('scan-active', 'feedback-active');
     delete game.dataset.grade; game.dataset.round = String(state.roundIndex + 1);
-    $('eyebrow').textContent = state.roundIndex === 2 ? 'FINAL LEVEL · 03 / 03' : `LEVEL 0${state.roundIndex + 1} / 03`;
+    $('eyebrow').hidden = false;
+    $('eyebrow').textContent = `${state.roundIndex + 1}단계 / 3단계`;
     $('prompt').textContent = TITLES[state.roundIndex];
     $('subcopy').textContent = HINTS[state.roundIndex];
-    $('arena-label').textContent = E.ROUNDS[state.roundIndex].label;
-    $('action-label').textContent = '지금 찍기'; action.disabled = false;
+    lastTenth = -1;
     updateSteps(); updateTimer(E.ROUND_MS, true);
-    applyPose(state.roundIndex, state.clock.snapshot(instant).value);
+    animateRound();
     announce(`${TITLES[state.roundIndex]}. 성공해야 다음 단계로 넘어갑니다.`);
     sound.tone(1050, .11);
   }
   function updateTimer(remaining, silent = false) {
-    $('time').textContent = Math.max(0, remaining / 1000).toFixed(1);
-    $('dial-value').style.strokeDashoffset = String(125.664 * (1 - remaining / E.ROUND_MS));
+    const tenth = Math.round(remaining / 100);
+    if (tenth === lastTenth) return;
+    lastTenth = tenth;
+    timeLabel.textContent = (tenth / 10).toFixed(1);
+    dial.style.strokeDashoffset = String(125.664 * (1 - remaining / E.ROUND_MS));
     $('time-display').classList.toggle('urgent', remaining <= 2500);
     const second = Math.ceil(remaining / 1000);
     if (second !== state.lastTick) {
-      const display = $('time-display');
-      display.classList.remove('tick'); void display.offsetWidth; display.classList.add('tick');
       if (!silent && state.lastTick !== -1 && remaining > 0) sound.tone(remaining <= 2500 ? 760 : 420, .028, 0, .018);
       state.lastTick = second;
     }
@@ -253,11 +271,10 @@
     $('shot-points').textContent = ''; 
     $('shot-feedback').setAttribute('aria-hidden', 'false');
     $('prompt').textContent = !E.isStageCleared(shot) ? '단계 실패' :
-      (state.roundIndex === 2 ? '최종 단계 성공!' : `${state.roundIndex + 1}단계 통과!`);
-    $('subcopy').textContent = !E.isStageCleared(shot) ? '이번 참가자의 도전이 종료됩니다.' :
-      state.roundIndex < 2 ? '다음 단계는 더 어렵습니다.' : '전체 미션 완료!';
-    $('scan-message').querySelector('span').textContent = !E.isStageCleared(shot) ? '스캔 실패' : state.roundIndex === 2 ? 'FINAL CLEAR' : 'NEXT LEVEL UNLOCKED';
-    $('action-label').textContent = '찰칵!'; action.disabled = true;
+      (state.roundIndex === 2 ? '마지막 촬영 성공!' : `${state.roundIndex + 1}단계 통과!`);
+    $('subcopy').textContent = !E.isStageCleared(shot) ? '이번 도전은 여기까지예요.' :
+      state.roundIndex < 2 ? '다음 단계는 더 어렵습니다.' : '세 단계 모두 성공했어요.';
+    $('scan-message').querySelector('span').textContent = !E.isStageCleared(shot) ? '스캔 실패' : state.roundIndex === 2 ? '촬영 완료' : '다음 촬영 준비';
     updateSteps(); updateScorePanel(); updateTimer(shot.remainingMs, true);
     announce(E.isStageCleared(shot) ? `${state.roundIndex + 1}단계 성공.` : `${state.roundIndex + 1}단계 실패. 미션 종료.`);
     sound.shot(shot.grade);
@@ -288,12 +305,11 @@
     game.classList.remove('scan-active', 'feedback-active');
     $('play-screen').hidden = true; $('result-screen').hidden = false;
     const newBest = state.total > state.bestBefore;
-    const perfect = state.shots.every(shot => shot.grade === 'PERFECT');
     const cleared = state.shots.length === 3 && state.shots.every(E.isStageCleared);
     $('result-data-check').textContent = cleared ? '✓' : '×';
     $('data-card').classList.toggle('is-failed', !cleared);
-    $('result-kicker').textContent = cleared ? 'ALL LEVELS CLEARED' : 'CHALLENGE ENDED';
-    $('result-title').textContent = cleared ? '최종 클리어!' : `${state.shots.length}단계에서 종료`;
+    $('result-kicker').textContent = cleared ? '촬영 완료' : '촬영 결과';
+    $('result-title').textContent = cleared ? '세 번 모두 촬영했어요' : `${state.shots.length}단계에서 종료`;
     $('result-score').textContent = cleared ? 'CLEAR' : 'END';
     $('result-score').setAttribute('aria-label', cleared ? '미션 성공' : '미션 종료');
     $('result-meter-fill').style.width = '0%';
@@ -302,7 +318,7 @@
       const item = document.createElement('div');
       item.className = 'result-round' + (shot.grade === 'PERFECT' ? ' perfect' : '');
       const label = document.createElement('span'), grade = document.createElement('b'), points = document.createElement('strong');
-      label.textContent = `LEVEL 0${i + 1} · ${LABELS[i]}`; grade.textContent = E.isStageCleared(shot) ? '성공' : '실패'; points.textContent = ''; 
+      label.textContent = `${i + 1}단계 · ${LABELS[i]}`; grade.textContent = E.isStageCleared(shot) ? '성공' : '실패'; points.textContent = '';
       item.append(label, grade, points); $('result-rounds').appendChild(item);
     });
     $('best-score').textContent = money(records.getState().best);
@@ -326,6 +342,9 @@
       state.previousPhase = state.phase;
       state.pauseAt = now();
       state.clock?.pause(state.pauseAt);
+      motion?.cancel();
+      motion = null;
+      if (state.previousPhase === 'round') applyPose(state.roundIndex, state.clock.snapshot(state.pauseAt).value);
       state.phase = 'paused'; game.dataset.paused = 'true';
     } else state.previousPhase = null;
     state.modal = kind;
@@ -338,8 +357,8 @@
       $('modal-content').innerHTML = '<p class="pause-copy">시간도 함께 멈춰 있어요.<br>준비되면 계속하기를 터치하세요.</p>';
     } else if (kind === 'help') {
       $('modal-kicker').textContent = 'HOW TO PLAY';
-      $('modal-title').textContent = '3단계 스캔 챌린지';
-      $('modal-content').innerHTML = '<ol class="how-to"><li><b>1</b><div><strong>가운데에 오면</strong><span>좌우로 움직이는 영수증을 멈춰주세요.</span></div></li><li><b>2</b><div><strong>똑바로 서면</strong><span>기울어진 영수증을 반듯하게 맞춰주세요.</span></div></li><li><b>3</b><div><strong>테두리에 맞으면</strong><span>커졌다 작아지는 영수증의 크기를 맞춰주세요.</span></div></li></ol><p class="modal-note">영수증 영역을 터치해 촬영 · 각 단계는 한 번만 도전합니다.<br>각 단계 7.5초 · 단계마다 속도 증가 · 실패 즉시 종료.<br>기록은 이 브라우저에만 저장됩니다. 실제 OCR 성능을 측정하지 않는 체험용 게임입니다.</p>';
+      $('modal-title').textContent = '촬영 방법';
+      $('modal-content').innerHTML = '<ol class="how-to"><li><b>1</b><div><strong>가운데에 오면</strong><span>좌우로 움직이는 영수증을 멈춰주세요.</span></div></li><li><b>2</b><div><strong>똑바로 서면</strong><span>기울어진 영수증을 반듯하게 맞춰주세요.</span></div></li><li><b>3</b><div><strong>테두리에 맞으면</strong><span>커졌다 작아지는 영수증의 크기를 맞춰주세요.</span></div></li></ol><p class="modal-note">영수증을 직접 눌러 촬영하세요. 단계마다 한 번씩 촬영할 수 있어요.<br>각 단계 7.5초 · 단계마다 속도 증가 · 실패 즉시 종료.<br>기록은 이 브라우저에만 저장됩니다. 실제 OCR 성능을 측정하지 않는 체험용 게임입니다.</p>';
     } else {
       $('modal-kicker').textContent = 'LOCAL RECORDS';
       $('modal-title').textContent = '이 PC의 최근 기록';
@@ -368,6 +387,7 @@
       state.clock?.resume(instant);
       state.phase = state.previousPhase;
       game.dataset.phase = state.phase;
+      if (state.phase === 'round') animateRound();
       sound.unlock();
     }
     state.modal = null; state.previousPhase = null;
@@ -396,25 +416,14 @@
   function frame(instant) {
     if (!state.running) return;
     if (state.toastUntil && instant >= state.toastUntil) { $('toast').hidden = true; state.toastUntil = 0; }
-    if (state.phase === 'home' && !state.modal) {
-      // The first animation frame can be timestamped before initialization.
-      const elapsed = Math.max(0, instant - state.phaseAt);
-      const round = Math.floor(elapsed / 4200) % 3;
-      const value = reducedMotion ? 0 : Math.sin(elapsed / 1050) * .68;
-      applyPose(round, value);
-      $('arena-label').textContent = `0${round + 1} / ${E.ROUNDS[round].label}`;
-    } else if (state.phase === 'countdown') updateCountdown(instant);
+    if (state.phase === 'countdown') updateCountdown(instant);
     else if (state.phase === 'round') {
       const current = state.clock.snapshot(instant);
-      applyPose(state.roundIndex, current.value); updateTimer(current.remainingMs);
+      if (!motion) applyPose(state.roundIndex, current.value);
+      arena.classList.toggle('is-aligned', current.error <= E.ROUNDS[state.roundIndex].maxError);
+      updateTimer(current.remainingMs);
       if (current.remainingMs <= 0) capture(instant);
     } else if (state.phase === 'capture') updateCapture(instant);
-    else if (state.phase === 'result') {
-      const progress = reducedMotion ? 1 : Math.min(1, (instant - state.phaseAt) / 1000);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      $('result-score').textContent = state.shots.length === 3 && state.shots.every(E.isStageCleared) ? 'CLEAR' : 'END';
-      $('result-meter-fill').style.width = '0%';
-    }
     state.frameId = requestAnimationFrame(frame);
   }
   function keydown(event) {
@@ -425,11 +434,10 @@
     if (isSpace) {
       if (state.phase === 'result') { event.preventDefault(); return; }
       const button = element?.closest('button');
-      if (button && !['action', 'resume'].includes(button.id)) return;
+      if (button || kiosk) return;
       event.preventDefault();
       if (event.repeat || state.spaceDown) return;
       state.spaceDown = true;
-      action.classList.add('pressed');
       activate(); return;
     }
     if (event.repeat) return;
@@ -445,25 +453,25 @@
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     }
   }
-  // Timestamp the first contact. A long press must not fire again on release.
-  let shutterHandled = false;
-  function touchShutter(event) {
-    if (!event.isPrimary) return;
-    const touch = event.pointerType === 'touch' || event.pointerType === 'pen';
-    const shoot = touch && state.phase === 'round' && !state.modal;
-    if (event.currentTarget === action) shutterHandled = shoot;
-    if (shoot) {
-      event.preventDefault();
-      capture(now());
-    }
-  }
-  arena.addEventListener('pointerdown', touchShutter);
-  action.addEventListener('pointerdown', touchShutter);
+  paper.addEventListener('pointerdown', event => {
+    if (!event.isPrimary || event.button !== 0 || state.modal || state.phase !== 'round') return;
+    event.preventDefault();
+    // Preserve contact time even if the main thread processes the input later.
+    const received = now();
+    const at = event.timeStamp > 0 && event.timeStamp <= received ? event.timeStamp : received;
+    if (at >= state.phaseAt) capture(at);
+  });
+  paper.addEventListener('click', event => {
+    if (state.modal) return;
+    if (state.phase === 'home') start();
+    // Native keyboard/assistive activation, or a browser without pointer events.
+    else if (event.detail === 0 || !window.PointerEvent) capture(now());
+  });
   window.addEventListener('keydown', keydown);
   window.addEventListener('keyup', event => {
-    if (event.code === 'Space' || event.key === ' ') { state.spaceDown = false; action.classList.remove('pressed'); }
+    if (event.code === 'Space' || event.key === ' ') { state.spaceDown = false; }
   });
-  window.addEventListener('blur', () => { state.spaceDown = false; action.classList.remove('pressed'); if (window.parent === window) pause(); });
+  window.addEventListener('blur', () => { state.spaceDown = false; if (window.parent === window) pause(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden && window.parent === window) pause(); });
   window.addEventListener('resize', resize);
   window.visualViewport?.addEventListener('resize', resize);
@@ -471,10 +479,6 @@
   document.fonts?.ready?.then(resize);
   document.addEventListener('fullscreenchange', () => {
     $('fullscreen').setAttribute('aria-label', document.fullscreenElement ? '전체 화면 나가기' : '전체 화면'); resize();
-  });
-  action.addEventListener('click', event => {
-    if (!shutterHandled || event.detail === 0) activate();
-    shutterHandled = false;
   });
   $('replay').addEventListener('click', () => {
     if (kiosk) window.parent.postMessage({aimsKiosk:'home'}, location.origin);

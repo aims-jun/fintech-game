@@ -9,7 +9,7 @@
     const w = Math.max(1, Number(width) || 1), h = Math.max(1, Number(height) || 1);
     // Reserve room for the largest scale (1.32) and all rotated corners.
     // Horizontal travel is included in the width constraint, not clipped away.
-    const paperHeight = Math.max(1, Math.min(560, (h - 48) / 1.34, (w - 48) / 1.62));
+    const paperHeight = Math.max(1, Math.min(1120, (h - 48) / 1.34, (w - 48) / 1.62));
     const paperWidth = paperHeight * .75;
     const travel = Math.max(0, Math.min(paperWidth * .56, (w - paperWidth) / 2 - 20));
     return Object.freeze({ paperWidth, paperHeight, travel });

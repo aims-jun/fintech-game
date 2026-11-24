@@ -3,7 +3,7 @@
   --ink: #171817;
   --paper: #f4f4f2;
   --line: #cfceca;
-  --tap: clamp(56px, 6.5vmin, 136px);
+  --tap: var(--ui-control);
   font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   color: var(--ink);
   background: var(--paper);
@@ -22,31 +22,31 @@ button:focus-visible { outline: 4px solid #cf4d2d; outline-offset: 2px; }
 }
 .menu-brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .menu-brand img { width: clamp(95px, 11vw, 370px); }
-.menu-brand span { color: #686966; font-size: clamp(11px, 1.1vw, 36px); font-weight: 700; letter-spacing: .1em; }
-.menu-title h1 { margin: 0; font-size: clamp(32px, 4.3vw, 130px); line-height: 1.15; letter-spacing: -.055em; }
+.menu-brand span { color: #686966; font-size: var(--ui-small); font-weight: 700; letter-spacing: .1em; }
+.menu-title h1 { margin: 0; font-size: var(--ui-display); line-height: 1.15; letter-spacing: -.055em; }
 .game-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 64px); min-height: 0; }
 .game-choice {
-  display: grid; grid-template-rows: minmax(0, 1fr) auto auto;
+  display: grid; grid-template: minmax(0, 1fr) auto / minmax(0,1fr) auto;
   min-width: 0; min-height: 0; padding: 0; overflow: hidden; text-align: left;
   border: 2px solid var(--line); border-radius: clamp(14px, 1.6vw, 50px); background: white;
 }
-.choice-icon { display: grid; place-items: center; min-height: 0; background: #eeeeeb; }
-.choice-icon svg { width: 65%; height: 84%; }
+.choice-icon { grid-column:1/-1; display: grid; place-items: center; min-height: 0; background: #eeeeeb; }
+.choice-icon svg { width: 53%; height: 69%; }
 .choice-copy { padding: clamp(12px, 2.2vmin, 50px) clamp(18px, 2.4vw, 85px); }
-.choice-copy strong { display: block; font-size: clamp(26px, 3.3vw, 110px); line-height: 1.06; letter-spacing: -.045em; }
-.choice-copy small { display: block; margin-top: .4em; font-size: clamp(16px, 1.6vw, 52px); color: #535451; }
+.choice-copy strong { display: block; font-size: var(--ui-title); line-height: 1.06; letter-spacing: -.045em; }
+.choice-copy small { display: block; margin-top: .4em; font-size: var(--ui-body); color: #535451; }
 .choice-go {
-  display: flex; align-items: center; justify-content: space-between;
-  min-height: clamp(68px, 10vh, 200px); padding: 0 clamp(18px, 2.4vw, 85px);
-  font-size: clamp(21px, 2.2vw, 68px); font-weight: 700; background: var(--ink); color: white;
+  display:grid; place-items:center; align-self:center; margin-right:clamp(16px,2.4vw,72px);
+  width:var(--ui-control); height:var(--ui-control); border-radius:50%;
+  background:var(--ink); color:white; font-size:calc(var(--ui-body)*1.3);
 }
-.game-choice:active { border-color: var(--ink); }
-.game-choice:active .choice-go, .game-choice:focus-visible .choice-go { background: #a53f28; }
+.game-choice:active, .game-choice:focus-visible { border-color:var(--ink); }
+.game-choice:active .choice-go { background:#a53f28; }
 .play { display: grid; grid-template-rows: minmax(0, 1fr) auto; background: var(--paper); }
 .play iframe { display: block; border: 0; width: 100%; height: 100%; min-height: 0; }
 .menu-back, .exit-dialog button, .handoff button {
   min-height: var(--tap); border: 1px solid #999a95; border-radius: .55em; background: white;
-  padding: .4em 1.3em; font-size: clamp(18px, 2.3vmin, 48px); font-weight: 700;
+  padding: .4em 1.3em; font-size: var(--ui-body); font-weight: 700;
 }
 .menu-back { justify-self: start; margin: 3px clamp(12px, 2vw, 60px); }
 .exit-dialog { width: min(90vw, max(480px, 35vw)); border: 1px solid var(--line); border-radius: 16px; padding: clamp(20px, 3vmin, 64px); }
@@ -59,16 +59,16 @@ button:focus-visible { outline: 4px solid #cf4d2d; outline-offset: 2px; }
 .menu-back:active, .exit-dialog button:active, .handoff button:active { transform: translateY(2px); }
 @media (orientation: portrait) {
   .game-choices { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(0, 1fr)); }
-  .game-choice { grid-template-columns: 34% minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .game-choice { grid-template: minmax(0,1fr) auto / minmax(0,1fr) auto; }
   .choice-icon { height: 100%; }
   .choice-copy { align-self: center; }
-  .choice-go { grid-column: 1 / -1; min-height: clamp(60px, 8vmin, 160px); }
+  .choice-copy { padding:12px 16px; }
 }
 @media (max-height: 480px) and (orientation: landscape) {
   .menu { padding: 10px 20px; gap: 6px; }
   .menu-title h1 { font-size: 26px; }
   .choice-copy { padding: 6px 14px; }
   .choice-copy strong { font-size: 23px; }
-  .choice-go { min-height: 52px; }
+
   .menu-back { min-height: 48px; }
 }

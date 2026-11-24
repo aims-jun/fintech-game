@@ -1,5 +1,5 @@
 /* Booth controls scale with the short edge in either orientation. */
-body.kiosk { --tap: clamp(52px, 5.8vmin, 128px); --button-text: clamp(17px, 2.1vmin, 42px); }
+body.kiosk { --tap: var(--ui-control); --button-text: var(--ui-body); }
 .kiosk .app-shell { grid-template-rows: max(calc(var(--tap) + 6px), 6.5vh) minmax(0,1fr) clamp(18px, 2.6vh, 44px); }
 .kiosk .header-actions { gap: clamp(8px, 1vmin, 20px); }
 .kiosk .header-actions button {
@@ -9,7 +9,7 @@ body.kiosk { --tap: clamp(52px, 5.8vmin, 128px); --button-text: clamp(17px, 2.1v
 .kiosk .primary-btn, .kiosk .practice-value, .kiosk .text-btn {
   min-height: var(--tap); font-size: var(--button-text); border-radius: 9px;
 }
-.kiosk .primary-btn { min-height: clamp(64px, 7.5vmin, 160px); min-width: min(100%, clamp(240px, 29vmin, 620px)); }
+.kiosk .primary-btn { min-height:var(--ui-primary); min-width:0; width:auto; padding:.65em 1.25em; gap:1.25em; }
 .kiosk .practice-value { border: 2px solid #84857d; padding: .5em .75em; background: white; }
 .kiosk .practice-value.chosen { border-color: var(--ink); background: var(--ink); color: white; }
 .kiosk .text-btn { padding: 0 .9em; border: 1px solid #aaa; background: white; color: #272824; }
@@ -45,4 +45,14 @@ body.kiosk { --tap: clamp(52px, 5.8vmin, 128px); --button-text: clamp(17px, 2.1v
   .kiosk .tutorial-heading .eyebrow, .kiosk .practice-paper h3 {display:none;}
 }
 .kiosk .arena-scene { max-width: max(1470px, 92vw); }
-.kiosk .primary-btn { width: min(74vw, clamp(248px,30vmin,650px)); }
+.kiosk .home-description, .kiosk #mission-instruction, .kiosk #practice-feedback, .kiosk .result-subtitle { font-size:var(--ui-body); line-height:1.4; }
+.kiosk #mission-title, .kiosk .tutorial-heading h1 { font-size:var(--ui-title); }
+.kiosk .mission-kicker, .kiosk .edition, .kiosk .practice-tag, .kiosk .racer-name span,
+.kiosk .eyebrow, .kiosk .page-footer, .kiosk .live-score span, .kiosk .live-score small { font-size:var(--ui-small); }
+.kiosk .round-feedback {font-size:var(--ui-small); line-height:1.35;}
+.kiosk .primary-btn {min-width:min(100%,9em);}
+.kiosk #back-home {border:0; background:transparent;}
+@media (max-height:500px) and (orientation:landscape) {
+  .kiosk #mission-title, .kiosk .tutorial-heading h1 {font-size:21px;}
+  .kiosk #mission-instruction, .kiosk #practice-feedback {font-size:15px;}
+}

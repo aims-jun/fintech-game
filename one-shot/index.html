@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#f7f8f7">
-  <meta name="description" content="터치로 도전하는 AIMS 원샷 스캔. 세 번의 타이밍으로 영수증을 맞춰보세요.">
+  <meta name="description" content="움직이는 영수증이 테두리에 맞으면 영수증을 눌러 촬영하세요.">
   <title>AIMS — ONE SHOT SCAN</title>
+  <link rel="stylesheet" href="../assets/kiosk.css">
   <link rel="stylesheet" href="game.css">
 </head>
 <body>
@@ -26,15 +27,14 @@
 
     <section class="play-screen" id="play-screen" aria-label="원샷 스캔 게임">
       <div class="heading">
-        <div class="eyebrow" id="eyebrow"><span class="live-dot"></span>3 LEVEL CHALLENGE</div>
-        <h1 id="prompt">맞는 순간 누르세요.</h1>
-        <p id="subcopy">프레임에 맞을 때 화면을 터치</p>
+        <div class="eyebrow" id="eyebrow" hidden></div>
+        <h1 id="prompt">영수증을 눌러 시작하세요</h1>
+        <p id="subcopy">움직이는 영수증이 테두리에 맞으면 눌러 촬영하세요.</p>
       </div>
 
       <div class="arena" id="arena" aria-label="움직이는 영수증과 스캔 프레임">
         <div class="arena-rule rule-top" aria-hidden="true"></div>
         <div class="arena-rule rule-bottom" aria-hidden="true"></div>
-        <div class="arena-label" id="arena-label">ALIGN THE RECEIPT</div>
         <div class="time-display" id="time-display" aria-label="남은 시간">
           <svg class="timer-dial" viewBox="0 0 48 48" aria-hidden="true"><circle class="dial-track" cx="24" cy="24" r="20"/><circle id="dial-value" cx="24" cy="24" r="20"/></svg>
           <span id="time">7.5</span><span class="timer-unit">SEC</span>
@@ -44,16 +44,15 @@
         <div class="target" id="target" aria-hidden="true">
           <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
           <div class="target-cross"></div>
-          <span class="frame-caption" id="frame-caption">이 안에 딱 맞게</span>
         </div>
 
-        <div class="paper" id="paper">
+        <button type="button" class="paper" id="paper" aria-label="영수증을 눌러 시작" disabled>
           <img class="receipt-image" src="../paper-race/assets/receipt-pharmacy-photo.png" alt="가상의 약제비 계산서·영수증" draggable="false" width="1086" height="1448">
-          <div class="receipt-fields" id="receipt-fields" aria-hidden="true"></div>
-          <div class="scan-wash" aria-hidden="true"></div>
-          <div class="scan-beam" aria-hidden="true"><span></span></div>
-          <div class="scan-stamp" aria-hidden="true"><svg viewBox="0 0 24 24"><path id="scan-stamp-path" d="m5 12 5 5L20 7"/></svg></div>
-        </div>
+          <span class="receipt-fields" id="receipt-fields" aria-hidden="true"></span>
+          <span class="scan-wash" aria-hidden="true"></span>
+          <span class="scan-beam" aria-hidden="true"><span></span></span>
+          <span class="scan-stamp" aria-hidden="true"><svg viewBox="0 0 24 24"><path id="scan-stamp-path" d="m5 12 5 5L20 7"/></svg></span>
+        </button>
         <div class="burst" id="burst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
         <div class="countdown" id="countdown" aria-hidden="true"><span id="countdown-number">3</span></div>
@@ -64,14 +63,13 @@
 
       <div class="play-controls">
         <div class="shots" aria-label="난이도가 올라가는 세 단계">
-          <div class="shot-step is-current" data-step="0"><span class="step-number">1</span><span class="step-label">쉬움 · 위치</span><b class="step-score"></b></div>
+          <div class="shot-step is-current" data-step="0"><span class="step-number">1</span><span class="step-label">위치</span><b class="step-score"></b></div>
           <span class="step-link" aria-hidden="true"></span>
-          <div class="shot-step" data-step="1"><span class="step-number">2</span><span class="step-label">보통 · 각도</span><b class="step-score"></b></div>
+          <div class="shot-step" data-step="1"><span class="step-number">2</span><span class="step-label">각도</span><b class="step-score"></b></div>
           <span class="step-link" aria-hidden="true"></span>
-          <div class="shot-step" data-step="2"><span class="step-number">3</span><span class="step-label">어려움 · 크기</span><b class="step-score"></b></div>
+          <div class="shot-step" data-step="2"><span class="step-number">3</span><span class="step-label">크기</span><b class="step-score"></b></div>
         </div>
-        <button class="action-button" id="action" disabled type="button"><span id="action-label">시작하기</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
-        <div class="score-panel"><span id="score-caption">3단계 도전</span><strong id="live-score">READY</strong></div>
+        <div class="score-panel"><span id="score-caption">진행 상황</span><strong id="live-score">0 / 3</strong></div>
       </div>
     </section>
 
@@ -95,7 +93,7 @@
       <p class="save-status" id="save-status">기록은 이 브라우저에 저장됩니다.</p>
     </section>
 
-    <footer class="footer"><span><b>종이에서 데이터로.</b> AIMS AutoCapture</span><span>3단계 스캔 게임 <i>·</i> 실제 OCR 성능 측정이 아닙니다</span><span class="version">ONE SHOT / LEVEL EDITION</span></footer>
+    <footer class="footer"><span>AIMS AutoCapture</span><span>체험용 가상 영수증입니다.</span></footer>
   </main>
 
   <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" hidden>
