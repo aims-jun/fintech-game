@@ -26,6 +26,8 @@ npm test
 npm run build
 ```
 
+배포판에도 같은 검사를 실행할 수 있습니다. KIOSK_TEST_URL에 검사할 배포 주소를 설정한 뒤 npm test를 실행하세요. 테스트용 브라우저는 각 참가 기록을 독립된 저장소에 보관합니다.
+
 | 위치 | 내용 |
 | --- | --- |
 | index.html, touch-center.css, touch-center.js | 터치 메뉴, 게임 열기, 직원 종료 확인, 참가자 교대 |
