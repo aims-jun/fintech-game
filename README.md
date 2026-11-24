@@ -42,6 +42,6 @@ ZIP 원본은 첫 커밋 `d54749f`에서 확인할 수 있습니다. 원본의 c
 
 ## GitHub와 Vercel
 
-[aims-jun/fintech-game](https://github.com/aims-jun/fintech-game)의 기본 브랜치는 main입니다. Vercel에서 이 저장소를 가져올 때 프로젝트 루트는 저장소 최상위, Framework Preset은 Other, Production Branch는 main으로 설정합니다. 빌드 명령과 출력 디렉터리는 vercel.json에 지정했습니다. 게임에는 서버나 환경 변수가 필요하지 않습니다.
+[aims-jun/fintech-game](https://github.com/aims-jun/fintech-game)의 main 브랜치가 [Vercel 프로젝트](https://vercel.com/juns-projects-c52d4ab2/fintech-game)에 연결되어 있습니다. 기능 브랜치에서 수정하고 테스트한 뒤 main에 병합하면 Vercel이 저장소 루트에서 빌드하고 [운영 사이트](https://fintech-game.vercel.app)를 갱신합니다.
 
-Git 연동 후에는 기능 브랜치에서 수정하고 테스트한 뒤 main에 병합하면 Vercel이 운영판을 배포합니다. 이전 판은 Git에서 변경을 되돌린 뒤 다시 배포할 수 있습니다.
+빌드 명령과 출력 디렉터리는 vercel.json에서 관리합니다. 배포 상태와 커밋은 Vercel 프로젝트의 Deployments에서 확인할 수 있습니다. 이전 버전으로 복구하려면 해당 변경을 Git에서 되돌린 뒤 main에 반영하세요.
