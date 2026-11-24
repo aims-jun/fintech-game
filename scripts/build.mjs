@@ -5,7 +5,7 @@ const output = 'dist';
 await rm(output, { recursive: true, force: true });
 await mkdir(output);
 
-for (const file of ['index.html', 'touch-center.css', 'touch-center.js', 'assets']) {
+for (const file of ['index.html', 'favicon.ico', 'touch-center.css', 'touch-center.js', 'assets']) {
   await cp(file, join(output, file), { recursive: true });
 }
 for (const game of ['paper-race', 'one-shot']) {
