@@ -248,13 +248,20 @@
     const shot = state.clock.capture(instant);
     if (!shot) return;
     state.shots.push(shot);
+    // Hold the receipt where the player saw it stop. Scoring still uses the
+    // touch time, but rewinding the pose to it reads as a bounce on slow screens.
+    const frozen = Boolean(motion);
+    if (frozen) {
+      motion.pause();
+      try { motion.commitStyles(); } catch { paper.style.transform = getComputedStyle(paper).transform; }
+    }
     setPhase('capture', instant);
     state.captureAligned = false; state.scanStarted = false;
     game.dataset.grade = E.isStageCleared(shot) ? 'SUCCESS' : 'MISS';
     $('scan-stamp-path').setAttribute('d', E.isStageCleared(shot) ? 'm5 12 5 5L20 7' : 'M5 5L19 19M19 5L5 19');
     game.classList.add('feedback-active');
     arena.classList.remove('is-aligned');
-    applyPose(state.roundIndex, shot.value);
+    if (!frozen) applyPose(state.roundIndex, shot.value);
     $('grade').textContent = E.isStageCleared(shot) ? 'SUCCESS' : 'FAIL';
     $('shot-points').textContent = ''; 
     $('shot-feedback').setAttribute('aria-hidden', 'false');
@@ -269,7 +276,7 @@
   }
   function updateCapture(instant) {
     const elapsed = instant - state.phaseAt;
-    if (elapsed >= 380 && !state.captureAligned) {
+    if (elapsed >= 300 && !state.captureAligned) {
       state.captureAligned = true; applyPose(state.roundIndex, 0);
     }
     if (elapsed >= 700 && !state.scanStarted) {

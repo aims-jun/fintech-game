@@ -118,7 +118,7 @@ h1,h2,p{margin:0}
 [data-phase=countdown] .paper{opacity:.4}
 .arena.is-aligned .target{background:#d8f34812}
 .arena.is-aligned .corner{border-color:#8d9d41}
-[data-phase=capture] .paper{transition:transform .5s cubic-bezier(.2,.85,.3,1);will-change:auto}
+[data-phase=capture] .paper{transition:transform .4s cubic-bezier(.45,0,.25,1)}
 [data-phase=capture].scan-active .scan-beam{animation:scan-sweep .75s linear both}
 [data-phase=capture].scan-active .scan-wash{animation:scan-fill .75s linear both}
 [data-phase=capture].scan-active .scan-stamp{animation:stamp .3s .7s cubic-bezier(.1,1.5,.5,1) forwards}
@@ -317,7 +317,7 @@ body {touch-action:none; user-select:none; -webkit-user-select:none}
 #paper > * { pointer-events:none; }
 #paper:enabled { cursor:pointer; }
 #paper:focus-visible { outline:3px solid var(--ink); outline-offset:4px; }
-#game[data-phase="round"] #paper { will-change:transform; }
+#game:is([data-phase="round"],[data-phase="capture"]) #paper { will-change:transform; }
 .game .play-controls { display:flex; justify-content:center; align-items:center; gap:clamp(12px, 2vmin, 36px); }
 .game .play-screen { grid-template-rows:auto minmax(0,1fr) auto; }
 .heading { padding-block:clamp(10px,2.5vh,44px); }
