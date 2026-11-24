@@ -301,7 +301,7 @@
     for (const frame of found) {
       if (!states.has(frame)) {
         const state = {profile:{width:Number(frame.dataset.photoWidth),height:Number(frame.dataset.photoHeight)},
-          canvas:frame.querySelector('.receipt-photo-canvas'), sheet:frame.querySelector('[data-print-sheet]'), button:frame.querySelector('[data-photo-zoom]'), zoom:1, pan:{x:0,y:0}, drag:null};
+          canvas:frame.querySelector('.receipt-photo-canvas'), sheet:frame.querySelector('[data-print-sheet]'), button:frame.querySelector('[data-photo-zoom]') || frame.closest('.paper-slot')?.querySelector('[data-photo-zoom]'), zoom:1, pan:{x:0,y:0}, drag:null};
         states.set(frame, state); frames.add(frame); observer?.observe(frame);
         if (state.sheet) { sheetFrames.set(state.sheet, frame); observer?.observe(state.sheet); }
         watchFonts(frame.ownerDocument);

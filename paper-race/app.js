@@ -20,6 +20,7 @@
   const store = E.createStore();
   const kiosk = window.parent !== window && new URLSearchParams(location.search).has('kiosk');
   if (kiosk) {
+    document.body.classList.add('kiosk');
     // A newly opened kiosk frame belongs to a new participant. Keep past results.
     if (store.getState().phase !== 'idle') await store.dispatch({type:'reset'});
     $('home-mark').removeAttribute('href');
@@ -47,6 +48,46 @@
   function documentHTML(doc,index,peer){
     return forms.render(doc,{side:index,mode:'player',peer});
   }
+  const picker = $('field-picker');
+  let pickerFields = [], pickerPage = 0;
+  function openFields(slot, doc) {
+    const buttons = [...slot.querySelectorAll('[data-field]')];
+    if (!buttons.some(button => !button.disabled)) return;
+    const byId = new Map(buttons.map(button => [button.dataset.field, button]));
+    const rows = doc.rows.map(row => byId.get(row.id)).filter(Boolean);
+    pickerFields = [...new Set([...rows, ...buttons])];
+    pickerPage = 0;
+    $('field-picker-title').textContent = doc.title;
+    renderFields();
+    picker.showModal();
+  }
+  function renderFields() {
+    const size = innerHeight < 500 ? 4 : 6;
+    const pages = Math.max(1, Math.ceil(pickerFields.length / size));
+    pickerPage = Math.max(0, Math.min(pickerPage, pages - 1));
+    $('field-options').replaceChildren(...pickerFields.slice(pickerPage * size, (pickerPage + 1) * size).map(source => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'field-option';
+      option.setAttribute('aria-pressed', source.getAttribute('aria-pressed'));
+      const label = document.createElement('span'), value = document.createElement('strong');
+      label.textContent = source.parentElement.querySelector('.field-description').textContent;
+      value.textContent = source.dataset.value;
+      option.append(label, value);
+      option.addEventListener('click', () => {
+        picker.close();
+        if (source.isConnected && !source.disabled) source.click();
+      });
+      return option;
+    }));
+    $('field-page').textContent = (pickerPage + 1) + ' / ' + pages;
+    $('field-prev').disabled = pickerPage === 0;
+    $('field-next').disabled = pickerPage === pages - 1;
+  }
+  $('field-close').addEventListener('click', () => picker.close());
+  $('field-prev').addEventListener('click', () => { pickerPage--; renderFields(); });
+  $('field-next').addEventListener('click', () => { pickerPage++; renderFields(); });
+  window.addEventListener('resize', () => { if (picker.open) renderFields(); });
   function renderDocs(v){
     const key=v.session+'-'+v.round;
     if(key===renderedDoc)return;
@@ -54,12 +95,22 @@
     const current=cases[v.round];
     $('doc-left').innerHTML=documentHTML(current.docs[0],0,current.docs[1]);$('doc-right').innerHTML=documentHTML(current.docs[1],1,current.docs[0]);
     if (kiosk) {
-      for (const viewport of $('documents').querySelectorAll('.receipt-photo-viewport')) {
+      for (const [index, slot] of [...$('documents').querySelectorAll('.paper-slot')].entries()) {
+        const tools = document.createElement('div');
+        tools.className = 'paper-tools';
+        const choose = document.createElement('button');
+        choose.type = 'button';
+        choose.className = 'open-fields';
+        choose.textContent = '항목 크게 보기';
+        choose.setAttribute('aria-label', current.docs[index].title + ' 항목 크게 보기');
+        choose.addEventListener('click', () => openFields(slot, current.docs[index]));
+        tools.append(choose);
         const zoom = document.createElement('button');
         zoom.type = 'button';
         zoom.className = 'photo-zoom-button';
         zoom.dataset.photoZoom = '';
-        viewport.append(zoom);
+        tools.append(zoom);
+        slot.prepend(tools);
       }
     }
     forms.mountPhotos($('documents'));
@@ -73,6 +124,7 @@
     document.querySelectorAll('.document-row').forEach(row=>row.addEventListener('click',event=>{if(!event.target.closest('button'))row.querySelector('button').click();}));
   }
   function render(v){
+    if (picker.open && (!v.canSelect || renderedDoc !== v.session + '-' + v.round)) picker.close();
     if(v.session!==lastSession){cases=bank.forSession(v.session);lastSession=v.session;lastFeedback='';lastSecond=-1;lastCountdown=-1;lastAi=-1;lastScore=-1;renderedDoc='';}
     if(v.phase!=='idle'){localScene='home';if($('ranking-dialog').open)$('ranking-dialog').close();}
     const scene=v.phase==='idle'?localScene:v.phase==='finished'?'result':'arena';

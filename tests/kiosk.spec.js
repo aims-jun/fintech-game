@@ -77,6 +77,7 @@ test('PAPER RACE times out and hands off once', async ({ page }) => {
 
 for (const outcome of ['clear', 'miss', 'timeout']) {
   test('ONE SHOT SCAN ' + outcome, async ({ page }) => {
+    if (outcome === 'timeout') await page.setViewportSize({width:844, height:390});
     await page.addInitScript(() => { Math.random = () => 0; });
     await page.clock.install({ time: new Date('2026-01-01T10:00:00Z') });
     const game = await choose(page, 'scan');
@@ -109,6 +110,7 @@ for (const outcome of ['clear', 'miss', 'timeout']) {
     const state = await arena.evaluate(() => window.OneShotApp.inspect());
     expect(state.records.plays).toBe(1);
     expect(state.shots).toHaveLength(outcome === 'clear' ? 3 : 1);
+    await expect(game.locator('#replay')).toBeInViewport({ratio:1});
     await game.locator('#replay').tap();
     await expect(page.locator('#menu')).toBeVisible();
   });
@@ -133,9 +135,22 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
   test('touch viewport ' + width + ' × ' + height, async ({ page }) => {
     await page.setViewportSize({width,height});
     for (const [name, button] of [['paper','#challenge'],['scan','#action']]) {
-      const game = await choose(page, name);
+      const card = page.locator('[data-open="' + name + '"]');
+      const strip = card.locator('.choice-go');
+      const area = await strip.boundingBox();
+      const bounds = await card.boundingBox();
+      expect(area.width).toBeGreaterThan(bounds.width * .95);
+      expect(area.height).toBeGreaterThanOrEqual(52);
+      const target = name === 'paper' ? card.locator('.choice-icon') : strip;
+      await target.tap();
+      const game = page.frameLocator('#game-frame');
       await expect(game.locator(button)).toBeEnabled();
       await expect(game.locator(button)).toBeInViewport({ratio:1});
+      for (const control of [game.locator(button), page.locator('#menu-back'), game.locator('#fullscreen')]) {
+        const rect = await control.boundingBox();
+        expect(rect.height).toBeGreaterThanOrEqual(48);
+        expect(rect.width).toBeGreaterThanOrEqual(48);
+      }
       for (const body of [page.locator('body'), game.locator('body')]) {
         const size = await body.evaluate(() => {
           const root = document.scrollingElement;
@@ -148,3 +163,41 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
     }
   });
 }
+
+test('large document buttons select the original field and close on timeout', async ({ page }) => {
+  await page.clock.install();
+  const game = await startPaper(page);
+  const slot = game.locator('#doc-left');
+  const open = slot.locator('.open-fields');
+  await open.tap();
+  const option = game.locator('.field-option').first();
+  await expect(option).toBeVisible();
+  const first = await option.textContent();
+  await game.locator('#field-next').tap();
+  await expect(option).not.toHaveText(first);
+  await game.locator('#field-prev').tap();
+  await expect(option).toHaveText(first);
+  await option.tap();
+  await expect(game.locator('#field-picker')).not.toBeVisible();
+  await expect(slot.locator('[data-field][aria-pressed="true"]')).toHaveCount(1);
+  await open.tap();
+  await page.clock.fastForward(46000);
+  await expect(game.locator('#field-picker')).not.toBeVisible();
+  await expect(game.locator('#result-home')).toBeVisible();
+});
+
+test('shutter button captures at contact before release', async ({ page }) => {
+  const game = await choose(page, 'scan');
+  const action = game.locator('#action');
+  await action.tap();
+  await expect(game.locator('#game')).toHaveAttribute('data-phase', 'round');
+  const rect = await action.boundingBox();
+  const client = await page.context().newCDPSession(page);
+  await client.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{x: rect.x + rect.width / 2, y: rect.y + rect.height / 2}],
+  });
+  await expect(game.locator('#game')).toHaveAttribute('data-phase', 'capture');
+  await client.send('Input.dispatchTouchEvent', {type:'touchEnd', touchPoints:[]});
+  expect(await action.evaluate(() => window.OneShotApp.inspect().shots)).toHaveLength(1);
+});

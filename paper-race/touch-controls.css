@@ -1,0 +1,48 @@
+/* Booth controls scale with the short edge in either orientation. */
+body.kiosk { --tap: clamp(52px, 5.8vmin, 128px); --button-text: clamp(17px, 2.1vmin, 42px); }
+.kiosk .app-shell { grid-template-rows: max(calc(var(--tap) + 6px), 6.5vh) minmax(0,1fr) clamp(18px, 2.6vh, 44px); }
+.kiosk .header-actions { gap: clamp(8px, 1vmin, 20px); }
+.kiosk .header-actions button {
+  width: var(--tap); height: var(--tap); background: #fffefa; border: 1px solid #c5c5c0;
+}
+.kiosk .header-actions svg { width: 48%; height: 48%; }
+.kiosk .primary-btn, .kiosk .practice-value, .kiosk .text-btn {
+  min-height: var(--tap); font-size: var(--button-text); border-radius: 9px;
+}
+.kiosk .primary-btn { min-height: clamp(64px, 7.5vmin, 160px); min-width: min(100%, clamp(240px, 29vmin, 620px)); }
+.kiosk .practice-value { border: 2px solid #84857d; padding: .5em .75em; background: white; }
+.kiosk .practice-value.chosen { border-color: var(--ink); background: var(--ink); color: white; }
+.kiosk .text-btn { padding: 0 .9em; border: 1px solid #aaa; background: white; color: #272824; }
+.kiosk .arena-bottom { height: auto; min-height: var(--tap); }
+.kiosk .arena-scene { grid-template-rows: clamp(56px,10vh,135px) auto minmax(0,1fr) auto; }
+.kiosk .mission-heading { padding-block: clamp(4px,1vh,16px); }
+.kiosk .round-feedback { font-size: clamp(13px,1.8vmin,32px); }
+.kiosk .paper-slot { display: grid; grid-template-rows: auto minmax(0,1fr); gap: 4px; min-width: 0; }
+.kiosk .paper-tools { display: flex; gap: max(6px, .8vmin); justify-content: center; }
+.kiosk .paper-tools button, .field-picker button {
+  position: static; min-height: var(--tap); padding: .35em .9em; border: 1px solid #94968b;
+  border-radius: 8px; font-size: var(--button-text); font-weight: 700; background: #fffefa;
+}
+.kiosk .paper-tools .open-fields { color: white; background: var(--ink); border-color: var(--ink); }
+.field-picker { width: min(94vw, max(660px, 60vw)); padding: clamp(12px,2.5vmin,48px); border: 1px solid #c3c3bd; border-radius: 16px; background: #f5f5f1; color: var(--ink); }
+.field-picker::backdrop { background: #15161299; }
+.field-picker header, .field-picker footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.field-picker h2 { margin: 0; font-size: clamp(20px,3vmin,64px); }
+.field-options { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: clamp(6px,1vmin,18px); margin-block: clamp(8px,1.5vmin,36px); }
+.field-picker .field-option { text-align: left; overflow-wrap: anywhere; line-height: 1.15; }
+.field-option span, .field-option strong { display:block; }
+.field-option span { color:#61625c; font-size:.83em; margin-bottom:.18em; }
+.field-option[aria-pressed="true"] { outline:3px solid #a73d1d; outline-offset:-3px; }
+.field-picker footer { font-size:var(--button-text); }
+.field-picker button:disabled { opacity:.4; }
+.kiosk button:active:not(:disabled) { filter: brightness(.88); }
+@media (max-height:500px) and (orientation:landscape) {
+  body.kiosk { --tap:48px; }
+  .kiosk .app-shell {grid-template-rows:50px minmax(0,1fr);}
+  .kiosk .arena-scene {grid-template-rows:40px auto minmax(0,1fr) auto;}
+  .kiosk .mission-heading {padding:2px;}
+  .kiosk .primary-btn {min-height:50px;}
+  .kiosk .tutorial-heading .eyebrow, .kiosk .practice-paper h3 {display:none;}
+}
+.kiosk .arena-scene { max-width: max(1470px, 92vw); }
+.kiosk .primary-btn { width: min(74vw, clamp(248px,30vmin,650px)); }

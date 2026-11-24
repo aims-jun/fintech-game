@@ -283,3 +283,41 @@ body {touch-action:none; user-select:none; -webkit-user-select:none}
   .how-to span, .modal-note {font-size:11px}
   .modal-actions {margin-top:8px}
 }
+
+/* Size controls for a standing player and keep the receipt area free of buttons. */
+.game, .modal-overlay { --tap:clamp(52px,5.8vmin,128px); --button-text:clamp(18px,2.2vmin,46px); }
+.tools { gap:clamp(6px,.9vmin,20px); }
+.tools button, .modal-card .modal-close {
+  min-width:var(--tap); min-height:var(--tap); border:1px solid #bbc0b8; border-radius:12px;
+  background:#fff; font-size:var(--button-text);
+}
+.tools button svg, .modal-close svg { width:48%; height:48%; }
+#action, #replay, .modal-actions #resume {
+  height:clamp(64px,7.8vmin,164px); min-width:min(100%,clamp(240px,29vmin,620px));
+  padding-inline:clamp(18px,2vmin,44px); border-radius:10px; font-size:var(--button-text);
+}
+#action > span, #replay > span { flex:1; }
+#game[data-phase="round"] #action { background:#d8f348; color:#171a16; border:2px solid #30372b; }
+@media (min-width:751px) and (min-height:801px) {
+  .game {grid-template-rows:max(76px,calc(var(--tap) + 8px)) minmax(0,1fr) 42px;}
+  .play-screen {grid-template-rows:clamp(125px,17vh,172px) minmax(0,1fr) max(112px,9.5vmin);}
+  .result-screen {grid-template-rows:clamp(105px,15vh,145px) minmax(0,1fr) max(93px,9.5vmin) 28px;}
+}
+@media (max-width:750px) {
+  .topbar {gap:6px;}
+  .tools {gap:5px;}
+  .play-controls {grid-template-rows: minmax(28px,auto) minmax(64px,auto);}
+  .result-controls {display:flex; align-items:center;}
+  #action, #replay {width:100%;}
+}
+@media (max-width:440px) {
+  .game {padding-inline:10px;}
+  .brand .official-brand {width:64px;}
+}
+@media (max-height:500px) and (orientation:landscape) {
+  .game, .modal-overlay {--tap:48px;}
+  .game {grid-template-rows:50px minmax(0,1fr);}
+  #action, #replay, .modal-actions #resume {min-height:50px; height:50px;}
+}
+.game, .result-screen { grid-template-columns:minmax(0,1fr); }
+.result-controls { display:flex; justify-content:center; max-width:100%; }

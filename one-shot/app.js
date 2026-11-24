@@ -445,14 +445,20 @@
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     }
   }
-  // StandbyME kiosk: one touch anywhere in the receipt area means one shutter press.
-  let lastTouchShot=0;
-  arena.addEventListener('pointerup', event => {
-    if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
-    if (event.isPrimary === false || state.phase !== 'round' || state.modal) return;
-    const t=now();if(t-lastTouchShot<450)return;lastTouchShot=t;
-    event.preventDefault();capture(t);
-  });
+  // Timestamp the first contact. A long press must not fire again on release.
+  let shutterHandled = false;
+  function touchShutter(event) {
+    if (!event.isPrimary) return;
+    const touch = event.pointerType === 'touch' || event.pointerType === 'pen';
+    const shoot = touch && state.phase === 'round' && !state.modal;
+    if (event.currentTarget === action) shutterHandled = shoot;
+    if (shoot) {
+      event.preventDefault();
+      capture(now());
+    }
+  }
+  arena.addEventListener('pointerdown', touchShutter);
+  action.addEventListener('pointerdown', touchShutter);
   window.addEventListener('keydown', keydown);
   window.addEventListener('keyup', event => {
     if (event.code === 'Space' || event.key === ' ') { state.spaceDown = false; action.classList.remove('pressed'); }
@@ -466,7 +472,10 @@
   document.addEventListener('fullscreenchange', () => {
     $('fullscreen').setAttribute('aria-label', document.fullscreenElement ? '전체 화면 나가기' : '전체 화면'); resize();
   });
-  action.addEventListener('click', activate);
+  action.addEventListener('click', event => {
+    if (!shutterHandled || event.detail === 0) activate();
+    shutterHandled = false;
+  });
   $('replay').addEventListener('click', () => {
     if (kiosk) window.parent.postMessage({aimsKiosk:'home'}, location.origin);
     else showHome();

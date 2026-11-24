@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="documents.css?v=6.0">
   <link rel="stylesheet" href="receipt-photos.css?v=6.0">
   <link rel="stylesheet" href="form-photos.css?v=6.0">
+  <link rel="stylesheet" href="touch-controls.css">
   <script defer src="cases.js?v=6.0"></script><script defer src="casebook.js?v=6.0"></script><script defer src="hospital-forms.js?v=6.0"></script><script defer src="receipt-photos.js?v=6.0"></script><script defer src="form-photos.js?v=6.0"></script><script defer src="documents.js?v=6.0"></script><script defer src="engine.js?v=6.0"></script><script defer src="app.js?v=6.0"></script>
 </head>
 <body>
@@ -94,6 +95,11 @@
     </main>
     <footer class="page-footer"><span id="footer-note">가상 서류 · AI 상대는 게임용 시뮬레이션입니다.</span><span class="build-label">AIMS / ARENA 6.0</span></footer>
   </div>
+  <dialog id="field-picker" class="field-picker" aria-labelledby="field-picker-title">
+    <header><h2 id="field-picker-title"></h2><button id="field-close" type="button">닫기</button></header>
+    <div id="field-options" class="field-options"></div>
+    <footer><button id="field-prev" type="button">‹ 이전</button><span id="field-page" aria-live="polite"></span><button id="field-next" type="button">다음 ›</button></footer>
+  </dialog>
   <dialog id="ranking-dialog" class="ranking-dialog"><div class="dialog-top"><span class="eyebrow">LOCAL LEADERBOARD</span><button class="icon-btn" id="close-ranking" aria-label="랭킹 닫기">×</button></div><h2>오늘의 눈썰미.</h2><div id="ranking-list"></div><p class="dialog-note">이 브라우저에 저장된 기록입니다. 난이도별로 순위를 매겨요.</p></dialog>
 
 </body>
