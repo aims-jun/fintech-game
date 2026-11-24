@@ -103,7 +103,9 @@ test('PAPER RACE times out and hands off once', async ({ page }) => {
   expect(results.map(r => r.won)).toEqual([false]);
 });
 
-for (const outcome of ['clear', 'miss', 'timeout']) {
+for (const [outcome, grades] of Object.entries({
+  clear:['PERFECT', 'GREAT', 'GOOD'], partial:['GOOD', 'MISS'], miss:['MISS'], timeout:['MISS'],
+})) {
   test('ONE SHOT SCAN ' + outcome, async ({ page }) => {
     if (outcome === 'timeout') await page.setViewportSize({width:844, height:390});
     await page.addInitScript(() => { Math.random = () => 0; });
@@ -114,18 +116,19 @@ for (const outcome of ['clear', 'miss', 'timeout']) {
     await game.locator('#paper').tap();
     await page.clock.fastForward(2400);
     const receipt = game.locator('#paper');
-    for (let round = 0; round < (outcome === 'clear' ? 3 : 1); round++) {
+    for (let round = 0; round < grades.length; round++) {
       await expect(game.locator('#game')).toHaveAttribute('data-phase', 'round');
       if (outcome === 'timeout') {
         await page.clock.fastForward(7501);
       } else {
-        if (outcome === 'clear') {
-          const delay = await receipt.evaluate((_, index) => {
+        if (grades[round] !== 'MISS') {
+          const delay = await receipt.evaluate((_, {index, grade}) => {
+            const engine = window.OneShotEngine;
             for (let t = 0; t <= 2700; t++) {
-              if (window.OneShotEngine.sample(index, t, 0).error < .005) return t;
+              if (engine.score(engine.sample(index, t, 0).error, false, index).grade === grade) return t;
             }
             throw new Error('Alignment not found');
-          }, round);
+          }, {index:round, grade:grades[round]});
           await page.clock.fastForward(delay);
         }
         // Drive the rule checks on the virtual clock. Physical contact and
@@ -135,10 +138,16 @@ for (const outcome of ['clear', 'miss', 'timeout']) {
       await expect(game.locator('#game')).toHaveAttribute('data-phase', 'capture');
       await page.clock.fastForward(1951);
     }
-    await expect(game.locator('#result-title')).toHaveText(outcome === 'clear' ? '세 번 모두 촬영했어요' : '1단계에서 종료');
+    await expect(game.locator('#result-title')).toHaveText(outcome === 'clear' ? '세 번 모두 촬영했어요' : `${grades.length}단계에서 종료`);
     const state = await receipt.evaluate(() => window.OneShotApp.inspect());
     expect(state.records.plays).toBe(1);
-    expect(state.shots).toHaveLength(outcome === 'clear' ? 3 : 1);
+    expect(state.shots.map(shot => shot.grade)).toEqual(grades);
+    const badges = game.locator('#result-rounds .result-round > b');
+    await expect(badges).toHaveText(grades.map(grade => grade === 'MISS' ? '실패' : '성공'));
+    for (const [index, grade] of grades.entries()) {
+      await expect(badges.nth(index)).toHaveCSS('background-color',
+        grade === 'MISS' ? 'rgb(251, 232, 231)' : 'rgb(216, 243, 72)');
+    }
     await expect(game.locator('#replay')).toBeInViewport({ratio:1});
     await game.locator('#replay').tap();
     await expect(page.locator('#menu')).toBeVisible();

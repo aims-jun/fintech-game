@@ -304,9 +304,10 @@
     $('result-rounds').replaceChildren();
     state.shots.forEach((shot, i) => {
       const item = document.createElement('div');
-      item.className = 'result-round' + (shot.grade === 'PERFECT' ? ' perfect' : '');
+      const passed = E.isStageCleared(shot);
+      item.className = passed ? 'result-round is-passed' : 'result-round is-failed';
       const label = document.createElement('span'), grade = document.createElement('b'), points = document.createElement('strong');
-      label.textContent = `${i + 1}단계 · ${LABELS[i]}`; grade.textContent = E.isStageCleared(shot) ? '성공' : '실패'; points.textContent = '';
+      label.textContent = `${i + 1}단계 · ${LABELS[i]}`; grade.textContent = passed ? '성공' : '실패'; points.textContent = '';
       item.append(label, grade, points); $('result-rounds').appendChild(item);
     });
     $('best-score').textContent = money(records.getState().best);

@@ -142,9 +142,10 @@ h1,h2,p{margin:0}
 .result-round{border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:flex-start;gap:7px}
 .result-round:last-child{border:0}
 .result-round>span{font-size:13px;color:#74816b}
-.result-round>b{font:700 15px/1.2 Arial,Arial,sans-serif;letter-spacing:-.5px}
+.result-round>b{font:700 15px/1.2 Arial,Arial,sans-serif;letter-spacing:-.5px;padding:.24em .54em;border-radius:.3em}
 .result-round>strong{font:700 23px/1.2 Arial,Arial,sans-serif}
-.result-round.perfect>b{background:var(--accent);padding:3px 5px;margin:-3px -5px}
+.result-round.is-passed>b{background:var(--accent);color:var(--ink)}
+.result-round.is-failed>b{background:#fbe8e7;color:#8f302b}
 .record-line{margin-top:28px;display:flex;align-items:center;gap:10px;font-size:12px}
 .record-line>span:first-child{font:700 11px/1 Arial,Arial,sans-serif;border:1px solid #bec8b6;border-radius:3px;padding:5px 7px;letter-spacing:.8px}
 .record-line>span:last-child{color:#839076}
