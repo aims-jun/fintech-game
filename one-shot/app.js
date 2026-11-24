@@ -4,7 +4,10 @@
   const L = window.OneShotLayout;
   const $ = id => document.getElementById(id);
   const money = value => Math.round(value).toLocaleString('ko-KR');
-  const kiosk = window.parent !== window && new URLSearchParams(location.search).has('kiosk');
+  const params = new URLSearchParams(location.search);
+  const kiosk = window.parent !== window && params.has('kiosk');
+  // ?raf moves the receipt from requestAnimationFrame instead of a compositor animation.
+  const compositorMotion = !params.has('raf');
   const now = () => performance.now();
   const COUNTDOWN_MS = 2400, CAPTURE_MS = 1950;
   const TITLES = ['위치 맞추기', '각도 맞추기', '크기 맞추기'];
@@ -24,7 +27,7 @@
     spaceDown: false, lastTick: -1, lastCount: -1, captureAligned: false, scanStarted: false,
     previousPhase: null, pauseAt: 0, modal: null, previousFocus: null,
     bestBefore: 0, total: 0, resultSaved: false, sound: records.getState().sound,
-    toastUntil: 0, running: true, frameId: 0, timerId: 0
+    toastUntil: 0, running: true, frameId: 0
   };
   let fit = L.fitStage(1100, 420);
   const game = $('game'), arena = $('arena'), paper = $('paper'), cueLayer = $('target-aligned');
@@ -74,7 +77,6 @@
     paper.disabled = phase !== 'home' && phase !== 'round';
     paper.setAttribute('aria-label', phase === 'home' ? '영수증을 눌러 시작' : '영수증 촬영');
     stopMotion();
-    wake();
   }
   function stopMotion() {
     motion?.cancel(); cue?.cancel();
@@ -155,7 +157,7 @@
     stopMotion();
     const round = state.roundIndex;
     applyPose(round, state.clock.snapshot(now()).value);
-    if (!paper.animate) return;
+    if (!paper.animate || !compositorMotion) return;
     // Sample a full cycle from the scoring engine. The compositor moves the
     // receipt on the same time origin used for hit scoring and pause/resume.
     const duration = E.ROUNDS[round].cycleMs;
@@ -271,8 +273,7 @@
     state.shots.push(shot);
     // Hold the receipt where the player saw it stop. Scoring still uses the
     // touch time, but rewinding the pose to it reads as a bounce on slow screens.
-    const frozen = Boolean(motion);
-    if (frozen) {
+    if (motion) {
       motion.pause();
       try { motion.commitStyles(); } catch { paper.style.transform = getComputedStyle(paper).transform; }
     }
@@ -282,7 +283,6 @@
     $('scan-stamp-path').setAttribute('d', E.isStageCleared(shot) ? 'm5 12 5 5L20 7' : 'M5 5L19 19M19 5L5 19');
     game.classList.add('feedback-active');
     arena.classList.remove('is-aligned');
-    if (!frozen) applyPose(state.roundIndex, shot.value);
     $('grade').textContent = E.isStageCleared(shot) ? 'SUCCESS' : 'FAIL';
     $('shot-points').textContent = ''; 
     $('shot-feedback').setAttribute('aria-hidden', 'false');
@@ -431,18 +431,6 @@
       updateTimer(current.remainingMs);
       if (current.remainingMs <= 0) capture(instant);
     } else if (state.phase === 'capture') updateCapture(instant);
-    schedule();
-  }
-  function schedule() {
-    if (!state.running) return;
-    // The compositor moves the receipt during a round. Waking the main thread
-    // every frame for a 10 Hz timer only adds style and commit work on a slow kiosk.
-    if (state.phase === 'round' && motion) state.timerId = setTimeout(() => { state.timerId = 0; frame(now()); }, 50);
-    else state.frameId = requestAnimationFrame(frame);
-  }
-  function wake() {
-    if (!state.timerId) return;
-    clearTimeout(state.timerId); state.timerId = 0;
     state.frameId = requestAnimationFrame(frame);
   }
   function keydown(event) {
@@ -519,10 +507,27 @@
   $('modal-close').addEventListener('click', () => closeModal(true));
   $('go-home').addEventListener('click', showHome);
   $('result-home').addEventListener('click', showHome);
-  window.addEventListener('pagehide', () => { pause(); state.running = false; cancelAnimationFrame(state.frameId); clearTimeout(state.timerId); state.timerId = 0; });
+  window.addEventListener('pagehide', () => { pause(); state.running = false; cancelAnimationFrame(state.frameId); });
   window.addEventListener('pageshow', () => { if (!state.running) { state.running = true; state.frameId = requestAnimationFrame(frame); } });
 
   makeReceipt(); showHome();
+  if (params.has('debug')) {
+    // On-device frame timing: frames per second and the longest gap in each second.
+    const panel = document.createElement('pre');
+    panel.className = 'debug-panel';
+    document.body.appendChild(panel);
+    let frames = 0, worst = 0, last = now(), since = last;
+    const sample = instant => {
+      worst = Math.max(worst, instant - last); last = instant; frames += 1;
+      if (instant - since >= 1000) {
+        panel.textContent = `${compositorMotion ? 'GPU' : 'rAF'} ${Math.round(frames * 1000 / (instant - since))}fps · 최장 ${Math.round(worst)}ms\n` +
+          `${innerWidth}×${innerHeight} @${devicePixelRatio}\n${navigator.userAgent}`;
+        frames = 0; worst = 0; since = instant;
+      }
+      requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+  }
   state.frameId = requestAnimationFrame(frame);
 
   // Game Center bridge: the spectator iframe is the only active game instance.

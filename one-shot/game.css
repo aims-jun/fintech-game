@@ -378,3 +378,4 @@ body {touch-action:none; user-select:none; -webkit-user-select:none}
 @media (max-width:430px) {
   .game .shot-step { padding:.35em .55em; }
 }
+.debug-panel{position:fixed;left:8px;bottom:8px;z-index:100;margin:0;padding:6px 10px;max-width:60vw;white-space:pre-wrap;font:12px/1.4 monospace;color:#fff;background:#000c;pointer-events:none;will-change:transform}
