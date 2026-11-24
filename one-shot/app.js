@@ -76,6 +76,8 @@
     game.dataset.phase = phase;
     paper.disabled = phase !== 'home' && phase !== 'round';
     paper.setAttribute('aria-label', phase === 'home' ? '영수증을 눌러 시작' : '영수증 촬영');
+    // The freeze must not ease in from a stale pose; only the later centering eases.
+    paper.style.transition = phase === 'capture' ? 'none' : '';
     stopMotion();
   }
   function stopMotion() {
@@ -275,6 +277,9 @@
     // touch time, but rewinding the pose to it reads as a bounce on slow screens.
     if (motion) {
       motion.pause();
+      // The compositor keeps moving while a slow main thread lags behind, so the
+      // timeline's last frame time is stale. Freeze at the present instead.
+      motion.currentTime = now() - motion.startTime;
       try { motion.commitStyles(); } catch { paper.style.transform = getComputedStyle(paper).transform; }
     }
     setPhase('capture', instant);
@@ -298,7 +303,7 @@
   function updateCapture(instant) {
     const elapsed = instant - state.phaseAt;
     if (elapsed >= 300 && !state.captureAligned) {
-      state.captureAligned = true; applyPose(state.roundIndex, 0);
+      state.captureAligned = true; paper.style.transition = ''; applyPose(state.roundIndex, 0);
     }
     if (elapsed >= 700 && !state.scanStarted) {
       state.scanStarted = true;
