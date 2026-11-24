@@ -7,7 +7,8 @@
 })(typeof window !== 'undefined' ? window : globalThis, function (root) {
   'use strict';
 
-  var DURATIONS = { easy: 45000, normal: 30000, hard: 20000 };
+  var RACE_MS = 30000;
+  var SAVED_DURATIONS = { easy: 45000, normal: RACE_MS, hard: 20000 };
   var PREVIOUS_DURATIONS = { easy: 60000, normal: 45000, hard: 32000 };
   var COUNTDOWN_MS = 3000;
   var REVEAL_MS = 1800;
@@ -16,7 +17,7 @@
     return {
       schema: 1, revision: 0, session: null, phase: 'idle', paused: false,
       pausedAt: null, phaseStartedAt: null, player: '', difficulty: 'normal',
-      durationMs: DURATIONS.normal, elapsedMs: 0, startedAt: null, round: 0, human: 0,
+      durationMs: RACE_MS, elapsedMs: 0, startedAt: null, round: 0, human: 0,
       selected: [], errors: 0, hints: 0, hintedRound: null, score: 0,
       winner: null, feedback: null, finishedAt: null, results: []
     };
@@ -87,19 +88,17 @@
       if (command.type === 'start') {
         // Replaying the same start command cannot restart an already-running race.
         if (!(command.session && command.session === next.session)) {
-          var difficulty = Object.prototype.hasOwnProperty.call(DURATIONS, command.difficulty) ? command.difficulty : next.difficulty;
           next = Object.assign(initial(), {
             revision: state.revision, results: next.results,
             session: typeof command.session === 'string' && command.session ? command.session : 'run-' + now + '-' + (state.revision + 1),
             player: String(command.player == null ? next.player : command.player).trim().slice(0, 40) || 'Guest',
-            difficulty: difficulty, durationMs: DURATIONS[difficulty],
             phase: 'countdown', phaseStartedAt: now
           });
         }
       } else if (command.type === 'reset') {
         next = Object.assign(initial(), {
           revision: state.revision, results: next.results,
-          player: next.player, difficulty: next.difficulty, durationMs: DURATIONS[next.difficulty]
+          player: next.player
         });
       } else if (command.type === 'clearResults') {
         if (next.results.length) next = Object.assign({}, next, { results: [] });
@@ -184,8 +183,8 @@
       if (!state || state.schema !== 1 || !Number.isSafeInteger(state.revision) || state.revision < 0 ||
         ['idle', 'countdown', 'playing', 'reveal', 'finished'].indexOf(state.phase) === -1 ||
         typeof state.player !== 'string' || typeof state.paused !== 'boolean' ||
-        !Object.prototype.hasOwnProperty.call(DURATIONS, state.difficulty) ||
-        (state.durationMs !== DURATIONS[state.difficulty] && state.durationMs !== PREVIOUS_DURATIONS[state.difficulty]) ||
+        !Object.prototype.hasOwnProperty.call(SAVED_DURATIONS, state.difficulty) ||
+        (state.durationMs !== SAVED_DURATIONS[state.difficulty] && state.durationMs !== PREVIOUS_DURATIONS[state.difficulty]) ||
         !Number.isInteger(state.round) || state.round < 0 || state.round > 2 ||
         !Number.isInteger(state.human) || state.human < 0 || state.human > 3 ||
         !Array.isArray(state.selected) || state.selected.length > 2 || !state.selected.every(function (id) { return typeof id === 'string'; }) ||
@@ -204,7 +203,9 @@
       }).slice(-200);
       // An existing race keeps its original deadline. The next race uses the new preset.
       return Object.assign(initial(), state, {
-        results: results, durationMs: state.phase === 'idle' ? DURATIONS[state.difficulty] : state.durationMs
+        results: results,
+        difficulty: state.phase === 'idle' ? 'normal' : state.difficulty,
+        durationMs: state.phase === 'idle' ? RACE_MS : state.durationMs
       });
     } catch (_error) { return null; }
   }

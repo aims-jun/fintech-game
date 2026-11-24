@@ -21,8 +21,6 @@ def standalone():
     for filename in ['receipt-hospital-photo.png', 'receipt-pharmacy-photo.png', 'claim-form-photo.png', 'detail-form-photo.png']:
         data = base64.b64encode((ROOT / 'assets' / filename).read_bytes()).decode('ascii')
         scripts = scripts.replace('assets/' + filename, 'data:image/png;base64,' + data)
-    # A downloaded single player file has no separate operator route.
-    scripts = scripts.replace("if (new URLSearchParams(location.search).get('view') === 'operator') {", "if (false) {")
     html = html.replace('</body>', '<script>\n' + scripts.replace('</script', '<\\/script') + '\n</script>\n</body>')
     return html
 

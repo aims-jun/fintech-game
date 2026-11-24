@@ -1,8 +1,5 @@
 (async function () {
   'use strict';
-  if (new URLSearchParams(location.search).get('view') === 'operator') {
-    location.replace('operator.html' + location.search); return;
-  }
   const E = window.ArenaEngine, bank = window.AIMS_CASEBOOK, forms = window.AIMS_DOCUMENTS;
   let cases = bank.forSession(null);
   const $ = id => document.getElementById(id);
@@ -30,7 +27,7 @@
     oscillator.connect(volume);volume.connect(context.destination);oscillator.start(at);oscillator.stop(at+duration+.01);
   }
   function unlockAudio(){hadInteraction=true;if(!context){const C=window.AudioContext||window.webkitAudioContext;if(C)context=new C();}context?.resume().catch(()=>{});}
-  function dispatch(command){return store.dispatch({session:store.getState().session,...command}).catch(error=>{console.error('게임 상태 변경 실패',error);$('footer-note').textContent='상태를 저장하지 못했어요. 운영자 화면을 확인해주세요.';});}
+  function dispatch(command){return store.dispatch({session:store.getState().session,...command}).catch(error=>{console.error('게임 상태 변경 실패',error);$('footer-note').textContent='게임 상태를 저장하지 못했어요. 브라우저 저장 설정을 확인해주세요.';});}
   async function startRace() {
     const start = $('start-race');
     const state = store.getState();
@@ -39,7 +36,7 @@
     try {
       unlockAudio();
       practice.clear();
-      await dispatch({type:'start', player:state.player || '관람객', difficulty:state.difficulty, session:bank.createSessionId()});
+      await dispatch({type:'start', player:state.player || '관람객', session:bank.createSessionId()});
     } finally {
       start.disabled = false;
     }
@@ -150,8 +147,7 @@
     $('result-subtitle').textContent=win?'세 가지 단서를 모두 찾았습니다.':`단서 ${v.human}/3개 발견 · 이번 게임 종료`;
     $('reward-message').textContent=win?'미션 성공 · 3/3 완료':'미션 종료 · 3문제 미완료';
     $('paper-final-score').textContent=v.score.toLocaleString('ko-KR');
-    const difficulty={easy:'여유롭게',normal:'보통',hard:'빠르게'}[v.difficulty];
-    $('result-facts').innerHTML=`<span><b>${(v.elapsedMs/1000).toFixed(1)}</b>초</span><span><b>${v.human}/3</b>발견</span><span>${difficulty}</span>`;
+    $('result-facts').innerHTML=`<span><b>${(v.elapsedMs/1000).toFixed(1)}</b>초</span><span><b>${v.human}/3</b>발견</span>`;
     if(win)[523,659,784,1047].forEach((hz,i)=>sound(hz,.27,.04,'sine',i*.12));else sound(294,.3,.025,'sine');
   }
   function updateCountdown(v) {
