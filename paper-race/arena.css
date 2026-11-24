@@ -62,3 +62,49 @@
 
 /* Touch-screen kiosk: larger targets, no gesture zoom or accidental text selection */
 html,body{overscroll-behavior:none}body{-webkit-user-select:none;user-select:none;touch-action:pan-x pan-y}.document-row button,[data-field],.practice-value,.primary-btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.document-row button,[data-field]{min-height:38px}.small-screen-notice{pointer-events:none} @media (max-width:899px) and (orientation:portrait){.small-screen-notice{display:flex}}
+
+body {touch-action:none}
+.icon-btn, .practice-value, .hint-btn {min-height:44px; min-width:44px}
+#documents .photo-zoom-button {min-height:44px}
+@media (orientation:portrait) {
+  .app-shell {padding:0 clamp(12px,3vw,32px); grid-template-rows:54px minmax(0,1fr) 22px}
+  .masthead {gap:10px; justify-content:space-between}
+  .masthead .edition {display:none}
+  .home-scene {grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr) auto}
+  .home-copy {padding:12px 0 0}
+  .home-copy h1 {font-size:clamp(36px,8vw,78px)}
+  .home-copy h1 br {display:none}
+  .hero-visual {min-height:0; overflow:hidden}
+  .practice-pair {width:100%; gap:6px}
+  .practice-paper {min-width:0; padding:12px}
+  .practice-field {flex-wrap:wrap; justify-content:center}
+  .arena-scene {grid-template-rows:64px auto minmax(0,1fr) auto}
+  .racebar {width:100%; grid-template-columns:1fr 60px 1fr; gap:12px}
+  .timepiece {width:55px; height:55px}
+  .timer-digits {font-size:24px}
+  .mission-heading {padding:6px 0}
+  #mission-title {font-size:clamp(16px,3vw,28px)}
+  .documents {grid-template-columns:1fr !important; grid-template-rows:repeat(2,minmax(0,1fr)); gap:8px; padding:4px}
+  .arena-bottom {height:auto; min-height:48px; padding:0; gap:8px}
+  .result-scene {grid-template-columns:1fr; align-content:center; gap:16px}
+  .result-main h1 {font-size:clamp(48px,10vh,110px)}
+  .result-main h1 br {display:none}
+  .brand-story {display:none}
+}
+@media (max-height:450px) {
+  .app-shell {grid-template-rows:44px minmax(0,1fr); padding:0 12px}
+  .page-footer, .home-baseline, .tutorial-heading p, .practice-tag, .brand-story {display:none}
+  .tutorial-scene, .tutorial-bottom {gap:4px}
+  .tutorial-heading h1 {font-size:22px}
+  .practice-paper {padding:8px}
+  .arena-scene {grid-template-rows:46px 52px minmax(0,1fr) 44px}
+  .timepiece {width:44px; height:44px}
+  .timepiece .timer-label {display:none}
+  .arena-bottom {height:44px}
+}
+
+@media (max-height:450px) {
+  .tutorial-bottom {display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; justify-content:center; column-gap:14px}
+  .tutorial-bottom p {flex-basis:100%}
+  .tutorial-bottom .primary-btn {min-height:44px; padding:6px 22px}
+}

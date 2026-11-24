@@ -1,0 +1,14 @@
+{
+  "name": "aims-game-center",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "http-server . -a 127.0.0.1 -p 8769 -c-1",
+    "build": "node scripts/build.mjs",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "http-server": "14.1.1"
+  }
+}

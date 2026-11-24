@@ -1,1 +1,54 @@
-(()=>{'use strict';const $=id=>document.getElementById(id);let game=null;const menu=$('menu'),play=$('play'),frame=$('game-frame'),dialog=$('exit-dialog');function home(){frame.src='about:blank';game=null;play.hidden=true;menu.hidden=false;dialog.close?.();}function open(which){if(!['paper','scan'].includes(which))return;game=which;menu.hidden=true;play.hidden=false;frame.src=which==='paper'?'paper-race/index.html?kiosk=1':'one-shot/index.html?kiosk=1';}document.querySelectorAll('[data-open]').forEach(btn=>btn.addEventListener('click',()=>open(btn.dataset.open)));$('menu-back').addEventListener('click',()=>{if(!game)return; if(typeof dialog.showModal==='function')dialog.showModal();else if(confirm('게임 선택 화면으로 이동할까요?'))home();});$('exit-cancel').addEventListener('click',()=>dialog.close());$('exit-confirm').addEventListener('click',home);window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==frame.contentWindow)return;if(event.data?.aimsKiosk==='home')home()});document.addEventListener('touchmove',event=>{if(!event.target.closest('iframe'))event.preventDefault()},{passive:false});})();
+(() => {
+  'use strict';
+  const menu = document.getElementById('menu');
+  const play = document.getElementById('play');
+  const handoff = document.getElementById('handoff');
+  const dialog = document.getElementById('exit-dialog');
+  const routes = {paper: 'paper-race', scan: 'one-shot'};
+  const turnKey = 'aims-kiosk-turn';
+  let frame;
+
+  function home() {
+    if (dialog.open) dialog.close();
+    frame?.remove();
+    frame = null;
+    try { sessionStorage.removeItem(turnKey); } catch {}
+    play.hidden = handoff.hidden = true;
+    menu.hidden = false;
+  }
+
+  function openGame(game) {
+    if (frame || menu.hidden || !routes[game]) return;
+    try { sessionStorage.setItem(turnKey, game); } catch {}
+    menu.hidden = true;
+    play.hidden = false;
+    frame = document.createElement('iframe');
+    frame.id = 'game-frame';
+    frame.title = game === 'paper' ? 'PAPER RACE' : 'ONE SHOT SCAN';
+    frame.allow = 'fullscreen';
+    frame.src = routes[game] + '/index.html?kiosk=1';
+    play.prepend(frame);
+  }
+
+  for (const button of menu.querySelectorAll('[data-open]')) {
+    button.addEventListener('click', () => openGame(button.dataset.open));
+    button.disabled = false;
+  }
+  document.getElementById('menu-back').addEventListener('click', () => {
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else if (confirm('현재 참가자의 차례를 종료할까요?')) home();
+  });
+  document.getElementById('exit-cancel').addEventListener('click', () => dialog.close());
+  document.getElementById('exit-confirm').addEventListener('click', home);
+  document.getElementById('next-player').addEventListener('click', home);
+  window.addEventListener('message', event => {
+    if (event.origin === location.origin && frame && event.source === frame.contentWindow &&
+        event.data?.aimsKiosk === 'home') home();
+  });
+  try {
+    if (sessionStorage.getItem(turnKey)) {
+      menu.hidden = true;
+      handoff.hidden = false;
+    }
+  } catch {}
+})();

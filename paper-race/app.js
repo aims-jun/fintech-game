@@ -1,4 +1,4 @@
-(function () {
+(async function () {
   'use strict';
   if (new URLSearchParams(location.search).get('view') === 'operator') {
     location.replace('operator.html' + location.search); return;
@@ -18,6 +18,13 @@
   let context = null, muted = false, practice = new Set(), frameId = 0, connectionFrame = 0, tickBusy = false, lastTick = 0, hadInteraction = false;
   try {muted = localStorage.getItem('aims-arena-muted') === 'true';} catch (_) {}
   const store = E.createStore();
+  const kiosk = window.parent !== window && new URLSearchParams(location.search).has('kiosk');
+  if (kiosk) {
+    // A newly opened kiosk frame belongs to a new participant. Keep past results.
+    if (store.getState().phase !== 'idle') await store.dispatch({type:'reset'});
+    $('home-mark').removeAttribute('href');
+    $('home-mark').setAttribute('aria-label', 'AIMS');
+  }
   function sound(freq, duration=.05, gain=.05, type='sine', delay=0) {
     if(muted || !context || context.state !== 'running' || !document.hasFocus())return;
     const oscillator=context.createOscillator(), volume=context.createGain(), at=context.currentTime+delay;
@@ -29,7 +36,7 @@
   function updateSound(){ $('sound-toggle').innerHTML=icons[muted?'muted':'sound'];$('sound-toggle').setAttribute('aria-label',muted?'소리 켜기':'소리 끄기');$('sound-toggle').title=(muted?'소리 켜기':'소리 끄기')+' · M';$('sound-toggle').setAttribute('aria-pressed',String(!muted));}
   function toggleSound(){unlockAudio();muted=!muted;try{localStorage.setItem('aims-arena-muted',String(muted));}catch(_){}updateSound();if(!muted)sound(660,.1);}
   function dispatch(command){return store.dispatch({session:store.getState().session,...command}).catch(error=>{console.error('게임 상태 변경 실패',error);$('footer-note').textContent='상태를 저장하지 못했어요. 운영자 화면을 확인해주세요.';});}
-  function startRace(){unlockAudio();lastSecond=-1;lastCountdown=-1;lastAi=-1;practice.clear();localScene='home';const state=store.getState();return store.dispatch({type:'start',player:state.player||'관람객',difficulty:state.difficulty,session:bank.createSessionId()});}
+  function startRace(){if (store.getState().phase !== 'idle' || localScene !== 'tutorial') return; unlockAudio();lastSecond=-1;lastCountdown=-1;lastAi=-1;practice.clear();localScene='home';const state=store.getState();return store.dispatch({type:'start',player:state.player||'관람객',difficulty:state.difficulty,session:bank.createSessionId()});}
   function showScene(name){
     if(name===renderedScene)return;
     renderedScene=name;
@@ -46,6 +53,15 @@
     renderedDoc=key;
     const current=cases[v.round];
     $('doc-left').innerHTML=documentHTML(current.docs[0],0,current.docs[1]);$('doc-right').innerHTML=documentHTML(current.docs[1],1,current.docs[0]);
+    if (kiosk) {
+      for (const viewport of $('documents').querySelectorAll('.receipt-photo-viewport')) {
+        const zoom = document.createElement('button');
+        zoom.type = 'button';
+        zoom.className = 'photo-zoom-button';
+        zoom.dataset.photoZoom = '';
+        viewport.append(zoom);
+      }
+    }
     forms.mountPhotos($('documents'));
     $('mission-title').textContent=current.title;$('round-label').textContent='ROUND 0'+(v.round+1);$('round-category').textContent=current.label;
     $('mission-instruction').textContent=current.instruction;
@@ -163,15 +179,18 @@
     $('ranking-list').innerHTML=['normal','easy','hard'].map(level=>{const rows=E.rank(results.filter(r=>r.difficulty===level)).slice(0,5);if(!rows.length)return '';return `<h3 style="font-size:11px;color:#879771;margin:22px 0 8px">${{normal:'보통 · 45초',easy:'여유롭게 · 60초',hard:'빠르게 · 32초'}[level]}</h3>`+rows.map((r,i)=>`<div class="ranking-row"><span class="place">${String(i+1).padStart(2,'0')}</span><span class="rank-name">${esc(r.name)} <small>${r.won?'WIN':''}</small></span><b>${r.score.toLocaleString()}</b></div>`).join('');}).join('')||'<p class="rank-empty">첫 번째 기록의 주인공이 되어보세요.</p>';
     $('ranking-dialog').showModal();
   }
-  async function fullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch(_){$('footer-note').textContent='브라우저 메뉴에서 전체화면을 켤 수 있어요.';}}
+  async function fullscreen(){try{const screen=kiosk?parent.document:document;if(screen.fullscreenElement)await screen.exitFullscreen();else await screen.documentElement.requestFullscreen();}catch(_){$('footer-note').textContent='브라우저 메뉴에서 전체화면을 켤 수 있어요.';}}
   $('fullscreen').innerHTML=icons.fullscreen;$('fullscreen').addEventListener('click',fullscreen);
-  $('home-mark').addEventListener('click',event=>{event.preventDefault();localScene='home';dispatch({type:'reset'});});
+  if (!kiosk) $('home-mark').addEventListener('click',event=>{event.preventDefault();localScene='home';dispatch({type:'reset'});});
   $('sound-toggle').addEventListener('click',toggleSound);updateSound();
   $('challenge').addEventListener('click',()=>{unlockAudio();practice.clear();for(const key of ['a','b'])$('practice-'+key).classList.remove('chosen');$('practice-feedback').textContent='두 곳을 누르면 한 문제 완료.';localScene='tutorial';render(E.view(store.getState(),Date.now()));});
   $('back-home').addEventListener('click',()=>{localScene='home';render(E.view(store.getState(),Date.now()));});
   $('practice-a').addEventListener('click',()=>practiceClick('a'));$('practice-b').addEventListener('click',()=>practiceClick('b'));
   $('start-race').addEventListener('click',startRace);
-  $('result-home').addEventListener('click',()=>{dispatch({type:'reset'});if(new URLSearchParams(location.search).has('kiosk'))window.parent.postMessage({aimsKiosk:'home'},location.origin);});
+  $('result-home').addEventListener('click',async () => {
+    await dispatch({type:'reset'});
+    if (kiosk) window.parent.postMessage({aimsKiosk:'home'}, location.origin);
+  });
   $('pause-control').addEventListener('click',()=>dispatch({type:'pause'}));$('resume').addEventListener('click',()=>{unlockAudio();dispatch({type:'pause'});});
   $('hint-btn').addEventListener('click',()=>{const v=E.view(store.getState(),Date.now());dispatch({type:'hint',round:v.round,session:v.session});});
   $('show-ranking')?.addEventListener('click',ranking);$('close-ranking').addEventListener('click',()=>$('ranking-dialog').close());
@@ -185,6 +204,7 @@
   $('documents').addEventListener('receiptphotolayout',scheduleConnection);
   window.addEventListener('resize',scheduleConnection);
   window.addEventListener('storage',event=>{if(event.key==='aims-arena-muted'){muted=event.newValue==='true';updateSound();}});
+  $('challenge').disabled = false;
   store.subscribe(state=>render(E.view(state,Date.now())));
   function frame(time){
     const raw=store.getState(), v=E.view(raw,Date.now());
