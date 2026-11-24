@@ -92,6 +92,30 @@ test('PAPER RACE keeps the documents hidden through 3, 2, 1 and a pause', async 
   await expect(field).toHaveAttribute('aria-pressed','true');
 });
 
+test('PAPER RACE shows the entire AI status beside the score at every race stage', async ({ page }) => {
+  await page.clock.install();
+  const game = await startPaper(page);
+  const status = game.locator('#ai-status');
+  for (const label of ['서류 읽는 중', '정보 비교 중', '마지막 확인 중']) {
+    await expect(status).toContainText(label);
+    for (const [width,height] of [[3840,2160], [1920,1080], [844,390], [390,844], [320,640]]) {
+      await page.setViewportSize({width,height});
+      await expect.poll(() => status.evaluate(() => [innerWidth, innerHeight])).toEqual([width, height]);
+      await expect.poll(() => status.evaluate(el => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const text = range.getBoundingClientRect();
+        const box = el.getBoundingClientRect();
+        const heading = el.closest('.racer-heading').getBoundingClientRect();
+        const score = document.getElementById('ai-count').getBoundingClientRect();
+        return text.left >= heading.left - 1 && text.right <= heading.right + 1 &&
+          text.right <= box.right + 1 && (text.right <= score.left || text.top >= score.bottom);
+      }), {message:label + ' at ' + width}).toBe(true);
+    }
+    if (label !== '마지막 확인 중') await page.clock.fastForward(15000);
+  }
+});
+
 test('PAPER RACE times out and hands off once', async ({ page }) => {
   await page.clock.install();
   const game = await startPaper(page);

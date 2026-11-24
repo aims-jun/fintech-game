@@ -174,7 +174,9 @@
       $('timepiece').classList.toggle('urgent',seconds<=10&&!v.paused);
       $('ai-fill').style.width=(v.aiProgress*100)+'%';$('ai-runner').style.left=(v.aiProgress*100)+'%';
       if(v.ai!==lastAi){$('ai-count').innerHTML=v.ai+'<span> / 3</span>';document.querySelectorAll('[data-ai-pip]').forEach(el=>el.classList.toggle('complete',Number(el.dataset.aiPip)<v.ai));lastAi=v.ai;}
-      $('ai-status').textContent=v.paused?'잠시 멈춤':v.phase==='reveal'?'정답 확인 중':v.ai===0?'서류 읽는 중...':v.ai===1?'정보 비교 중...':'마지막 확인 중...';
+      const status = v.paused ? '잠시 멈춤' : v.phase === 'reveal' ? '정답 확인 중' :
+        ['서류 읽는 중', '정보 비교 중', '마지막 확인 중'][Math.min(v.ai, 2)];
+      if ($('ai-status').textContent !== status) $('ai-status').textContent = status;
     }
     if (v.phase === 'countdown') updateCountdown(v);
   }

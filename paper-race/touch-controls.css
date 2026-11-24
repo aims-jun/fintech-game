@@ -97,3 +97,19 @@ body.kiosk { --tap: var(--ui-control); --button-text: var(--ui-body); }
   .round-timer-value { font-size:26px; }
   .round-timer-track { grid-column:1/-1; }
 }
+
+.racer-heading { column-gap:.5em; }
+.racer-name { min-width:0; }
+.kiosk .racer-name { font-size:var(--ui-body); }
+.racer-name > #ai-status { max-width:none; flex:none; }
+.race-count { flex:none; white-space:nowrap; }
+
+@media (max-width:650px) {
+  .racer-heading {
+    display:grid; grid-template-columns:minmax(0,1fr) auto;
+    align-items:baseline; row-gap:2px; margin-bottom:6px;
+  }
+  .racer-name { display:contents; }
+  .racer-heading .race-count { grid-column:2; grid-row:1; }
+  .racer-name > span { grid-column:1/-1; grid-row:2; max-width:100%; line-height:1.15; }
+}
