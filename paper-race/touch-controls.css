@@ -56,3 +56,28 @@ body.kiosk { --tap: var(--ui-control); --button-text: var(--ui-body); }
   .kiosk #mission-title, .kiosk .tutorial-heading h1 {font-size:21px;}
   .kiosk #mission-instruction, .kiosk #practice-feedback {font-size:15px;}
 }
+
+/* Size the original artwork within its own panel, including the rotated corners. */
+@supports (width: 1cqw) {
+  .kiosk .hero-visual {
+    container-type: size;
+    --sheet-height: min(62cqh, 54cqw, 740px);
+    --clock-size: min(38cqw, 44cqh, max(250px, 17.5vw), 425px);
+  }
+  .kiosk .hero-sheet {
+    height: var(--sheet-height);
+    width: calc(var(--sheet-height) * .76);
+    padding: calc(var(--sheet-height) * .05);
+    font-size: calc(var(--sheet-height) * .028);
+  }
+  .kiosk .sheet-a { left: 7%; top: 17%; }
+  .kiosk .sheet-b { right: 7%; top: 24%; }
+  .kiosk .hero-sheet h3 { font-size: 2.05em; }
+  .kiosk .mini-paper-brand, .kiosk .hero-sheet .mini-row { font-size: 1em; }
+  .kiosk .mini-paper-brand small { font-size: .46em; }
+  .kiosk .hero-sheet > p, .kiosk .mini-signature { font-size: .8em; }
+  .kiosk .hero-clock { width: var(--clock-size); top: 66%; }
+  .kiosk .hero-clock strong { font-size: calc(var(--clock-size) * .46); }
+  .kiosk .hero-clock-top, .kiosk .hero-clock-bottom { font-size: calc(var(--clock-size) * .033); }
+  .kiosk .clock-hand { transform-origin: 50% calc(var(--clock-size) * .43); }
+}

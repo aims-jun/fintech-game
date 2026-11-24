@@ -12,7 +12,10 @@
 <body>
   <main class="game" id="game" data-phase="home" data-round="1" tabindex="-1">
     <header class="topbar">
-      <div class="brand" aria-label="AIMS AutoCapture"><img class="official-brand" src="../assets/aims-logo.png" alt="AIMS"><span class="product">AutoCapture</span></div>
+      <div class="kiosk-brand-group">
+        <button type="button" id="menu-back" aria-label="게임 선택 화면으로" hidden><span class="back-icon" aria-hidden="true">←</span><span class="back-label">게임 선택</span></button>
+        <div class="brand" aria-label="AIMS AutoCapture"><img class="official-brand" src="../assets/aims-logo.png" alt="AIMS"><span class="product">AutoCapture</span></div>
+      </div>
       <div class="game-name">ONE SHOT <b>SCAN</b><span class="edition">FINTECH WEEK</span></div>
       <nav class="tools" aria-label="게임 설정">
         <button class="icon-button" id="sound" type="button" aria-label="소리 켜기" aria-pressed="false" title="소리">

@@ -16,7 +16,10 @@
 <body>
   <div class="app-shell" id="app">
     <header class="masthead">
-      <a class="wordmark" id="home-mark" href="#home" aria-label="AIMS 게임 첫 화면"><img src="../assets/aims-logo.png" alt="AIMS" class="inner-brand-image"></a>
+      <div class="kiosk-brand-group">
+        <button type="button" id="menu-back" aria-label="게임 선택 화면으로" hidden><span class="back-icon" aria-hidden="true">←</span><span class="back-label">게임 선택</span></button>
+        <a class="wordmark" id="home-mark" href="#home" aria-label="AIMS 게임 첫 화면"><img src="../assets/aims-logo.png" alt="AIMS" class="inner-brand-image"></a>
+      </div>
       <span class="edition">THE PAPER RACE <span class="edition-divider">/</span> FINTECH WEEK</span>
       <div class="header-actions">
         <button class="icon-btn" id="sound-toggle" title="소리 켜기 · M" aria-label="소리 켜기" aria-pressed="false"></button>

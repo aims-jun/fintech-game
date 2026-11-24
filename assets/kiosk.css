@@ -7,3 +7,40 @@
   --ui-control: clamp(48px, 5vmin, 90px);
   --ui-primary: clamp(54px, 5.8vmin, 104px);
 }
+
+.kiosk-brand-group {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.5vmin, 28px);
+}
+#menu-back:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: .5em;
+  min-width: var(--ui-control);
+  min-height: var(--ui-control);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #30312e;
+  font: 700 var(--ui-small)/1.2 Arial, "Malgun Gothic", sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.back-icon {
+  display: grid;
+  place-items: center;
+  width: 1.85em;
+  height: 1.85em;
+  border: 1px solid #c5c5be;
+  border-radius: 50%;
+  font-size: 1.25em;
+}
+#menu-back:active .back-icon { background: #242520; color: white; }
+#menu-back:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (max-width: 750px) {
+  .back-label { display: none; }
+  #menu-back:not([hidden]) { justify-content: center; }
+  .kiosk-brand-group { gap: 4px; }
+}

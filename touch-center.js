@@ -27,17 +27,23 @@
     frame.title = game === 'paper' ? 'PAPER RACE' : 'ONE SHOT SCAN';
     frame.allow = 'fullscreen';
     frame.src = routes[game] + '/index.html?kiosk=1';
-    play.prepend(frame);
+    frame.addEventListener('load', event => {
+      const back = event.currentTarget.contentDocument?.getElementById('menu-back');
+      if (!back) return;
+      back.hidden = false;
+      back.addEventListener('click', requestExit);
+    });
+    play.append(frame);
   }
 
   for (const button of menu.querySelectorAll('[data-open]')) {
     button.addEventListener('click', () => openGame(button.dataset.open));
     button.disabled = false;
   }
-  document.getElementById('menu-back').addEventListener('click', () => {
+  function requestExit() {
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else if (confirm('현재 참가자의 차례를 종료할까요?')) home();
-  });
+  }
   document.getElementById('exit-cancel').addEventListener('click', () => dialog.close());
   document.getElementById('exit-confirm').addEventListener('click', home);
   document.getElementById('next-player').addEventListener('click', home);

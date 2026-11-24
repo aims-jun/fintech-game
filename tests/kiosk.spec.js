@@ -119,10 +119,10 @@ for (const outcome of ['clear', 'miss', 'timeout']) {
 
 test('staff exit, cancellation and refresh handoff', async ({ page }) => {
   const game = await startPaper(page);
-  await page.locator('#menu-back').tap();
+  await game.locator('#menu-back').tap();
   await page.locator('#exit-cancel').tap();
   await expect(game.locator('#arena')).toBeVisible();
-  await page.locator('#menu-back').tap();
+  await game.locator('#menu-back').tap();
   await page.locator('#exit-confirm').tap();
   const next = await choose(page, 'paper');
   await expect(next.locator('#challenge')).toBeVisible();
@@ -146,10 +146,23 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
       const game = page.frameLocator('#game-frame');
       await expect(game.locator(button)).toBeEnabled();
       await expect(game.locator(button)).toBeInViewport({ratio:1});
-      for (const control of [game.locator(button), page.locator('#menu-back'), game.locator('#fullscreen')]) {
+      for (const control of [game.locator(button), game.locator('#menu-back'), game.locator('#fullscreen')]) {
         const rect = await control.boundingBox();
         expect(rect.height).toBeGreaterThanOrEqual(48);
         expect(rect.width).toBeGreaterThanOrEqual(48);
+      }
+      const back = game.locator('header #menu-back');
+      await expect(back).toBeInViewport({ratio:1});
+      if (name === 'paper') {
+        const inside = await game.locator('.hero-visual').evaluate(panel => {
+          const outer = panel.getBoundingClientRect();
+          return [...panel.querySelectorAll('.hero-sheet, .hero-clock')].every(part => {
+            const box = part.getBoundingClientRect();
+            return box.left >= outer.left && box.right <= outer.right &&
+              box.top >= outer.top && box.bottom <= outer.bottom;
+          });
+        });
+        expect(inside).toBe(true);
       }
       for (const body of [page.locator('body'), game.locator('body')]) {
         const size = await body.evaluate(() => {
@@ -158,7 +171,7 @@ for (const [width,height] of [[3840,2160],[1280,720],[1080,1920],[390,844],[844,
         });
         expect(size).toEqual([0,0]);
       }
-      await page.locator('#menu-back').tap();
+      await game.locator('#menu-back').tap();
       await page.locator('#exit-confirm').tap();
     }
   });
