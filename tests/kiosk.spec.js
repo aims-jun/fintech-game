@@ -112,19 +112,21 @@ test('PAPER RACE shows the entire AI status beside the score at every race stage
           text.right <= box.right + 1 && (text.right <= score.left || text.top >= score.bottom);
       }), {message:label + ' at ' + width}).toBe(true);
     }
-    if (label !== '마지막 확인 중') await page.clock.fastForward(15000);
+    if (label !== '마지막 확인 중') await page.clock.fastForward(10000);
   }
 });
 
 test('PAPER RACE times out and hands off once', async ({ page }) => {
   await page.clock.install();
   const game = await startPaper(page);
-  await page.clock.fastForward(46000);
+  await expect(game.locator('#mission-title')).toBeVisible();
+  await expect(game.locator('#mission-instruction')).toHaveCount(0);
+  await page.clock.fastForward(30000);
   await expect(game.locator('#reward-message')).toContainText('미션 종료');
   await game.locator('#result-home').tap();
   await expect(page.locator('#menu')).toBeVisible();
   const results = await page.evaluate(() => JSON.parse(localStorage.getItem('aims-arena-state-v1')).results);
-  expect(results.map(r => r.won)).toEqual([false]);
+  expect(results.map(r => [r.won, r.seconds])).toEqual([[false, 30]]);
 });
 
 for (const [outcome, grades] of Object.entries({

@@ -7,7 +7,8 @@
 })(typeof window !== 'undefined' ? window : globalThis, function (root) {
   'use strict';
 
-  var DURATIONS = { easy: 60000, normal: 45000, hard: 32000 };
+  var DURATIONS = { easy: 45000, normal: 30000, hard: 20000 };
+  var PREVIOUS_DURATIONS = { easy: 60000, normal: 45000, hard: 32000 };
   var COUNTDOWN_MS = 3000;
   var REVEAL_MS = 1800;
 
@@ -15,7 +16,7 @@
     return {
       schema: 1, revision: 0, session: null, phase: 'idle', paused: false,
       pausedAt: null, phaseStartedAt: null, player: '', difficulty: 'normal',
-      durationMs: 45000, elapsedMs: 0, startedAt: null, round: 0, human: 0,
+      durationMs: DURATIONS.normal, elapsedMs: 0, startedAt: null, round: 0, human: 0,
       selected: [], errors: 0, hints: 0, hintedRound: null, score: 0,
       winner: null, feedback: null, finishedAt: null, results: []
     };
@@ -98,7 +99,7 @@
       } else if (command.type === 'reset') {
         next = Object.assign(initial(), {
           revision: state.revision, results: next.results,
-          player: next.player, difficulty: next.difficulty, durationMs: next.durationMs
+          player: next.player, difficulty: next.difficulty, durationMs: DURATIONS[next.difficulty]
         });
       } else if (command.type === 'clearResults') {
         if (next.results.length) next = Object.assign({}, next, { results: [] });
@@ -183,7 +184,8 @@
       if (!state || state.schema !== 1 || !Number.isSafeInteger(state.revision) || state.revision < 0 ||
         ['idle', 'countdown', 'playing', 'reveal', 'finished'].indexOf(state.phase) === -1 ||
         typeof state.player !== 'string' || typeof state.paused !== 'boolean' ||
-        !Object.prototype.hasOwnProperty.call(DURATIONS, state.difficulty) || state.durationMs !== DURATIONS[state.difficulty] ||
+        !Object.prototype.hasOwnProperty.call(DURATIONS, state.difficulty) ||
+        (state.durationMs !== DURATIONS[state.difficulty] && state.durationMs !== PREVIOUS_DURATIONS[state.difficulty]) ||
         !Number.isInteger(state.round) || state.round < 0 || state.round > 2 ||
         !Number.isInteger(state.human) || state.human < 0 || state.human > 3 ||
         !Array.isArray(state.selected) || state.selected.length > 2 || !state.selected.every(function (id) { return typeof id === 'string'; }) ||
@@ -200,7 +202,10 @@
         seen.add(row.session);
         return true;
       }).slice(-200);
-      return Object.assign(initial(), state, { results: results });
+      // An existing race keeps its original deadline. The next race uses the new preset.
+      return Object.assign(initial(), state, {
+        results: results, durationMs: state.phase === 'idle' ? DURATIONS[state.difficulty] : state.durationMs
+      });
     } catch (_error) { return null; }
   }
 

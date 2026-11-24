@@ -7,7 +7,7 @@
   let cases = bank.forSession(null);
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
-  const levels = { easy: { name:'여유롭게', seconds:60 }, normal: { name:'보통', seconds:45 }, hard: { name:'빠르게', seconds:32 } };
+  const levels = { easy:'여유롭게', normal:'보통', hard:'빠르게' };
   const settingsKey = 'aims-arena-operator-settings-v1';
   const soundKey = 'aims-arena-muted';
   const radios = Array.from(document.querySelectorAll('input[name="difficulty"]'));
@@ -189,7 +189,7 @@
     rankingKey = nextKey;
     const rows = E.rank(results.filter(row => row.difficulty === rankLevel));
     document.querySelectorAll('[data-rank-level]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.rankLevel === rankLevel)));
-    $('record-count').textContent = rows.length ? levels[rankLevel].name + ' ' + rows.length + '개 · 전체 ' + results.length + '개 기록' : '이 난이도의 첫 기록을 기다려요.';
+    $('record-count').textContent = rows.length ? levels[rankLevel] + ' ' + rows.length + '개 · 전체 ' + results.length + '개 기록' : '이 난이도의 첫 기록을 기다려요.';
     $('ranking-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${String(index + 1).padStart(2, '0')}</td><td>${esc(row.name)}</td><td>${row.score.toLocaleString()}</td><td>${row.seconds.toFixed(1)}초</td><td><span class="rank-result${row.won ? ' win' : ''}">${row.won ? 'WIN' : 'TRY'}</span></td></tr>`).join('') : '<tr><td class="empty-ranking" colspan="5">첫 번째 기록의 주인공을 기다리고 있어요.</td></tr>';
     $('export-csv').disabled = !results.length;
     $('clear-results').disabled = !results.length;
@@ -215,7 +215,7 @@
     $('phase-badge').textContent = view.paused ? '일시정지' : labels[view.phase];
     $('phase-badge').dataset.phase = view.phase;
     $('phase-badge').dataset.paused = String(view.paused);
-    $('live-player').textContent = view.phase === 'idle' ? '다음 참가자를 준비해주세요.' : view.player + ' · ' + levels[view.difficulty].name + ' ' + levels[view.difficulty].seconds + '초';
+    $('live-player').textContent = view.phase === 'idle' ? '다음 참가자를 준비해주세요.' : view.player + ' · ' + levels[view.difficulty] + ' ' + (view.durationMs / 1000) + '초';
     const statuses = { idle:'READY WHEN YOU ARE.', countdown:'READY, SET…', playing:'HUMAN vs. AI', reveal:view.winner ? 'HUMAN WINS.' : 'NICE FIND.', finished:view.winner === 'human' ? '미션 성공' : '미션 종료' };
     $('live-status').textContent = view.paused ? 'TAKE A BREATH.' : statuses[view.phase];
     $('live-caption').textContent = view.paused ? '두 화면의 경기 시간이 함께 멈췄어요.' : view.phase === 'idle' ? '경기 시작 후 3초의 준비 시간이 있어요.' : view.phase === 'finished' ? '이번 경기 결과예요. 새 참가자로 바로 시작할 수 있어요.' : view.phase === 'reveal' ? '정답을 확인하는 동안 경기 시간은 멈춰요.' : '세 문제를 모두 찾으면 도전 성공입니다.';

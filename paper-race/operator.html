@@ -53,9 +53,9 @@
               <p class="field-help" id="nickname-help">새 경기를 시작할 때 적용돼요.</p>
               <fieldset class="difficulty-fieldset">
                 <legend class="field-caption">난이도 <span>AI 완료 시간</span></legend>
-                <label class="difficulty-option"><input type="radio" name="difficulty" value="easy"><span class="radio-mark" aria-hidden="true"></span><span class="difficulty-name">여유롭게<small>처음이라면 천천히</small></span><strong>60<span>초</span></strong></label>
-                <label class="difficulty-option"><input type="radio" name="difficulty" value="normal" checked><span class="radio-mark" aria-hidden="true"></span><span class="difficulty-name">보통<small>집중해서 한 판</small></span><strong>45<span>초</span></strong></label>
-                <label class="difficulty-option"><input type="radio" name="difficulty" value="hard"><span class="radio-mark" aria-hidden="true"></span><span class="difficulty-name">빠르게<small>속도에 자신 있다면</small></span><strong>32<span>초</span></strong></label>
+                <label class="difficulty-option"><input type="radio" name="difficulty" value="easy"><span class="radio-mark" aria-hidden="true"></span><span class="difficulty-name">여유롭게<small>처음이라면 천천히</small></span><strong>45<span>초</span></strong></label>
+                <label class="difficulty-option"><input type="radio" name="difficulty" value="normal" checked><span class="radio-mark" aria-hidden="true"></span><span class="difficulty-name">보통<small>집중해서 한 판</small></span><strong>30<span>초</span></strong></label>
+                <label class="difficulty-option"><input type="radio" name="difficulty" value="hard"><span class="radio-mark" aria-hidden="true"></span><span class="difficulty-name">빠르게<small>속도에 자신 있다면</small></span><strong>20<span>초</span></strong></label>
               </fieldset>
               <button class="button button-dark start-button" id="start-btn" type="submit"><span id="start-label">경기 시작</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13M11 5l5 5-5 5"/></svg></button>
             </form>
@@ -77,7 +77,7 @@
             <div class="live-top"><div class="section-heading"><span class="section-number">02</span><h2 id="live-heading">실시간 경기</h2></div><span class="phase-badge" id="phase-badge" aria-live="polite">대기 중</span></div>
             <div class="live-main">
               <div class="live-identity"><p id="live-player">다음 참가자를 준비해주세요.</p><h3 id="live-status">READY WHEN YOU ARE.</h3><p id="live-caption">경기를 시작하면 3초 후 카운트다운이 끝나요.</p></div>
-              <div class="live-clock" id="live-clock" role="timer" aria-live="off"><span id="clock-seconds">45</span><small>남은 시간 / 초</small></div>
+              <div class="live-clock" id="live-clock" role="timer" aria-live="off"><span id="clock-seconds">30</span><small>남은 시간 / 초</small></div>
             </div>
             <div class="live-stats">
               <div><span>현재 라운드</span><strong id="round-stat">—<small> / 03</small></strong></div>
@@ -109,7 +109,7 @@
   <dialog id="operator-rankings" class="operator-rankings-dialog"><div class="ranking-dialog-top"><span class="eyebrow">LOCAL RECORDS</span><button class="icon-button" id="close-rankings" type="button" aria-label="기록 닫기">×</button></div>
       <section class="panel rankings-panel" aria-labelledby="rankings-heading">
         <div class="rankings-heading-row"><div class="section-heading"><span class="section-number">03</span><h2 id="rankings-heading">운영 기록</h2></div><div class="ranking-actions"><button class="text-button" id="export-csv" type="button" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2v10m-4-4 4 4 4-4M3 13v4h14v-4"/></svg>전체 CSV</button><button class="text-button subtle" id="clear-results" type="button" disabled>전체 기록 지우기</button></div></div>
-        <div class="ranking-filter-row"><div class="ranking-filters" role="group" aria-label="기록 난이도 선택"><button type="button" data-rank-level="easy" aria-pressed="false">여유롭게 <span>60초</span></button><button type="button" data-rank-level="normal" aria-pressed="true">보통 <span>45초</span></button><button type="button" data-rank-level="hard" aria-pressed="false">빠르게 <span>32초</span></button></div><p class="record-count" id="record-count">아직 기록이 없어요.</p></div>
+        <div class="ranking-filter-row"><div class="ranking-filters" role="group" aria-label="기록 난이도 선택"><button type="button" data-rank-level="easy" aria-pressed="false">여유롭게 <span>45초</span></button><button type="button" data-rank-level="normal" aria-pressed="true">보통 <span>30초</span></button><button type="button" data-rank-level="hard" aria-pressed="false">빠르게 <span>20초</span></button></div><p class="record-count" id="record-count">아직 기록이 없어요.</p></div>
         <div class="ranking-table-wrap"><table class="ranking-table"><caption class="sr-only">선택한 난이도의 참가자 순위</caption><thead><tr><th scope="col">순위</th><th scope="col">참가자</th><th scope="col">점수</th><th scope="col">경과 시간</th><th scope="col">결과</th></tr></thead><tbody id="ranking-body"><tr><td class="empty-ranking" colspan="5">첫 번째 기록의 주인공을 기다리고 있어요.</td></tr></tbody></table></div>
         <p class="ranking-note">점수가 같으면 경과 시간이 짧은 기록이 앞에 표시됩니다. 최근 200개의 경기 기록을 보관합니다.</p>
       </section>

@@ -70,7 +70,6 @@
     $('doc-left').innerHTML=documentHTML(current.docs[0],0,current.docs[1]);$('doc-right').innerHTML=documentHTML(current.docs[1],1,current.docs[0]);
     forms.mountPhotos($('documents'));
     $('mission-title').textContent=current.title;$('round-label').textContent='ROUND 0'+(v.round+1);$('round-category').textContent=current.label;
-    $('mission-instruction').textContent=current.instruction;
     $('evidence-lines').innerHTML='';$('documents').classList.remove('correct');
     document.querySelectorAll('[data-field]').forEach(button=>button.addEventListener('click',()=>{
       unlockAudio();
@@ -99,7 +98,6 @@
         const order=v.selected.indexOf(button.dataset.field);
         button.disabled=!v.canSelect;button.classList.toggle('selected',order>=0);button.classList.toggle('second',order===1);button.classList.toggle('found',v.phase==='reveal'&&order>=0);button.setAttribute('aria-pressed',String(order>=0));
       });
-      $('selection-one').classList.toggle('on',v.selected.length>=1);$('selection-two').classList.toggle('on',v.selected.length>=2);
       if(lastScore!==v.score){$('live-score').textContent=v.score.toLocaleString();$('live-score').classList.remove('score-pop');void $('live-score').offsetWidth;$('live-score').classList.add('score-pop');lastScore=v.score;}
       const current=cases[v.round], fb=v.feedback;
       const feedbackKey=v.session+'-'+v.round+'-'+(fb?.kind||'')+'-'+(fb?.at||0);
@@ -188,7 +186,7 @@
   function practiceClick(id){unlockAudio();practice.has(id)?practice.delete(id):practice.add(id);for(const key of ['a','b'])$('practice-'+key).classList.toggle('chosen',practice.has(key));$('practice-feedback').textContent=practice.size===2?'맞아요! 이 두 날짜처럼, 본 게임에서는 단서 3개를 찾아요.':practice.size===1?'좋아요. 나머지 날짜도 눌러보세요.':'두 곳을 누르면 한 문제 완료.';sound(practice.size===2?784:440,.08,.03);}
   function ranking(){
     const results=store.getState().results;
-    $('ranking-list').innerHTML=['normal','easy','hard'].map(level=>{const rows=E.rank(results.filter(r=>r.difficulty===level)).slice(0,5);if(!rows.length)return '';return `<h3 style="font-size:11px;color:#879771;margin:22px 0 8px">${{normal:'보통 · 45초',easy:'여유롭게 · 60초',hard:'빠르게 · 32초'}[level]}</h3>`+rows.map((r,i)=>`<div class="ranking-row"><span class="place">${String(i+1).padStart(2,'0')}</span><span class="rank-name">${esc(r.name)} <small>${r.won?'WIN':''}</small></span><b>${r.score.toLocaleString()}</b></div>`).join('');}).join('')||'<p class="rank-empty">첫 번째 기록의 주인공이 되어보세요.</p>';
+    $('ranking-list').innerHTML=['normal','easy','hard'].map(level=>{const rows=E.rank(results.filter(r=>r.difficulty===level)).slice(0,5);if(!rows.length)return '';return `<h3 style="font-size:11px;color:#879771;margin:22px 0 8px">${{normal:'보통',easy:'여유롭게',hard:'빠르게'}[level]}</h3>`+rows.map((r,i)=>`<div class="ranking-row"><span class="place">${String(i+1).padStart(2,'0')}</span><span class="rank-name">${esc(r.name)} <small>${r.won?'WIN':''}</small></span><b>${r.score.toLocaleString()}</b></div>`).join('');}).join('')||'<p class="rank-empty">첫 번째 기록의 주인공이 되어보세요.</p>';
     $('ranking-dialog').showModal();
   }
   GameControls.mount({

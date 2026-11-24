@@ -27,7 +27,7 @@ body.kiosk { --tap: var(--ui-control); --button-text: var(--ui-body); }
   .kiosk .tutorial-heading .eyebrow, .kiosk .practice-paper h3 {display:none;}
 }
 .kiosk .arena-scene { max-width: max(1470px, 92vw); }
-.kiosk .home-description, .kiosk #mission-instruction, .kiosk #practice-feedback, .kiosk .result-subtitle { font-size:var(--ui-body); line-height:1.4; }
+.kiosk .home-description, .kiosk #practice-feedback, .kiosk .result-subtitle { font-size:var(--ui-body); line-height:1.4; }
 .kiosk #mission-title, .kiosk .tutorial-heading h1 { font-size:var(--ui-title); }
 .kiosk .mission-kicker, .kiosk .edition, .kiosk .practice-tag, .kiosk .racer-name span,
 .kiosk .eyebrow, .kiosk .page-footer, .kiosk .live-score span, .kiosk .live-score small { font-size:var(--ui-small); }
@@ -36,7 +36,7 @@ body.kiosk { --tap: var(--ui-control); --button-text: var(--ui-body); }
 .kiosk #back-home {border:0; background:transparent;}
 @media (max-height:500px) and (orientation:landscape) {
   .kiosk #mission-title, .kiosk .tutorial-heading h1 {font-size:21px;}
-  .kiosk #mission-instruction, .kiosk #practice-feedback {font-size:15px;}
+  .kiosk #practice-feedback {font-size:15px;}
 }
 
 /* Size the original artwork within its own panel, including the rotated corners. */
